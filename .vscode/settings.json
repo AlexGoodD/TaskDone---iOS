@@ -1,0 +1,10 @@
+{
+    "editor.quickSuggestions": {
+        "comments": "off",
+        "strings": "off",
+        "other": "off"
+    },
+    "swift.languageServerPath": "/usr/bin/sourcekit-lsp",
+"swift.path.swift_driver": "/usr/bin/swift",
+"swift.path.swiftc": "/usr/bin/swiftc"
+}

@@ -5,26 +5,36 @@ struct ContentView: View {
     @State private var showAddTaskView: Bool = false
     var body: some View {
         VStack(spacing: 16) {
-            HStack {
-                Text(getCurrentTime())
-                    .font(.largeTitle)
-                    .bold()
-                Spacer()
-                VStack {
+            ZStack {
+                HStack {
+                    Text(getCurrentTime())
+                        .font(.title3)
+                        .accentColor(Color.dateText)
+                    Spacer()
                     Text(getCurrentDay())
-                        .font(.title)
+                        .font(.largeTitle)
+                        .accentColor(Color.dateText)
                     Text(getCurrentMonth())
                         .font(.title3)
+                        .accentColor(Color.dateText)
                 }
             }
-            .padding()
+            .padding(.horizontal, 50)
+            .frame(maxWidth: .infinity)
             Picker("Sections", selection: $selectedSection) {
                 Text("Próximamente").tag(0)
                 Text("Vencidas").tag(1)
                 Text("Completadas").tag(2)
             }
             .pickerStyle(SegmentedPickerStyle())
-            .padding()
+            .background(Color.accentBackground.opacity(0.4)) 
+            .cornerRadius(10) 
+            .overlay(
+                RoundedRectangle(cornerRadius: 30)
+                    .stroke(Color.accentBackground, lineWidth: 2) 
+            )
+            .padding(.horizontal, 30)
+            .tint(.red)
             List {
                 if selectedSection == 0 {
                     ForEach(viewModel.upcomingTasks) { task in
@@ -44,19 +54,21 @@ struct ContentView: View {
             Button(action: {
                 showAddTaskView = true
             }) {
-                Text("Añadir Tarea")
-                    .bold()
-                    .frame(maxWidth: .infinity)
+                Image(systemName: "plus")
+                    .resizable()
+                    .frame(width: 15, height: 15)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.accentBackground)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .clipShape(Circle())
             }
             .sheet(isPresented: $showAddTaskView) {
                 AddTaskView(viewModel: viewModel)
+                    .presentationDetents([.small])
             }
             .padding()
         }
+        .background(Color.background) 
         .onAppear {
             viewModel.cleanOldTasks()
         }
@@ -77,6 +89,6 @@ struct ContentView: View {
         return formatter.string(from: Date())
     }
 }
-    #Preview {
+#Preview {
     ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

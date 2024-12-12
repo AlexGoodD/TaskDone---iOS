@@ -1,9 +1,11 @@
 import SwiftUI
+
 struct AddTaskView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var viewModel: TaskViewModel
     @State private var title: String = ""
     @State private var dueDate: Date = Date()
+    
     var body: some View {
         NavigationView {
             Form {
@@ -20,6 +22,7 @@ struct AddTaskView: View {
         }
     }
 }
+
 #Preview {
-    AddTaskView(viewModel: TaskViewModel()).environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
