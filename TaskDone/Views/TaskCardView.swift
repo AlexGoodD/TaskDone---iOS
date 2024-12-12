@@ -3,6 +3,7 @@ import SwiftUI
 struct TaskCard: View {
     var category: TaskCategory
     @Binding var expandedCategoryId: UUID?
+    @EnvironmentObject var viewModel: TaskViewModel // Referencia al ViewModel
 
     var isExpanded: Bool {
         expandedCategoryId == category.id
@@ -12,7 +13,7 @@ struct TaskCard: View {
         VStack {
             HStack {
                 Text(category.name)
-                    .font(.title)
+                    .font(.headline)
                     .foregroundColor(category.color)
                 Spacer()
             }
@@ -23,22 +24,24 @@ struct TaskCard: View {
                 
                 ForEach(category.tasks) { task in
                     HStack {
-                        Text(task.title)
-                            .strikethrough(task.isCompleted, color: .gray)
-                        Spacer()
                         Button(action: {
-                            
+                            viewModel.toggleTaskCompletion(categoryId: category.id, taskId: task.id)
                         }) {
-                            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                            Image(systemName: task.isCompleted ? "" : "square")
                                 .foregroundColor(.accentColor)
                         }
+                        Text(task.title)
+                            .strikethrough(task.isCompleted)
+                        Spacer()
+                        
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 5)
                 }
             }
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(category.color.opacity(0.2)))
+        .opacity(isExpanded ? 1.0 : 0.5) // Ajusta la opacidad aquí
         .onTapGesture {
             withAnimation {
                 expandedCategoryId = isExpanded ? nil : category.id

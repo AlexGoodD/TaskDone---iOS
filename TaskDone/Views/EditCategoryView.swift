@@ -2,29 +2,29 @@ import SwiftUI
 
 struct EditCategoryView: View {
     @Binding var category: TaskCategory
-
+    
     var body: some View {
         Form {
             Section(header: Text("Nombre de Categoría")) {
                 TextField("Nombre", text: $category.name)
             }
-
+            
             Section(header: Text("Color de Categoría")) {
                 ColorPicker("Color", selection: $category.color)
             }
-
+            
             Section(header: Text("Tareas")) {
                 ForEach($category.tasks) { $task in
                     HStack {
                         TextField("Título", text: $task.title)
                         Spacer()
                         Button(action: {
- if let index = category.tasks.firstIndex(where: { $0.id == task.id }) {
-        category.tasks.remove(at: index)
-    }                        }) {
-                            Image(systemName: "trash")
-                                .foregroundColor(.red)
-                        }
+                            if let index = category.tasks.firstIndex(where: { $0.id == task.id }) {
+                                category.tasks.remove(at: index)
+                            }                        }) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
                     }
                 }
                 
@@ -51,7 +51,7 @@ struct EditCategoryView_Previews: PreviewProvider {
                 Task(title: "Planificar reunión", isCompleted: false)
             ]
         )
-
+        
         
         StatefulPreviewWrapper(exampleCategory) { bindingCategory in
             EditCategoryView(category: bindingCategory)
@@ -63,12 +63,12 @@ struct EditCategoryView_Previews: PreviewProvider {
 struct StatefulPreviewWrapper<Value>: View {
     @State private var value: Value
     private let content: (Binding<Value>) -> AnyView
-
+    
     init(_ initialValue: Value, @ViewBuilder content: @escaping (Binding<Value>) -> some View) {
         self._value = State(initialValue: initialValue)
         self.content = { AnyView(content($0)) }
     }
-
+    
     var body: some View {
         content($value)
     }

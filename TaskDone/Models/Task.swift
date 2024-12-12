@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 struct Task: Identifiable {
     var id = UUID()
