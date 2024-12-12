@@ -64,7 +64,7 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showAddTaskView) {
                 AddTaskView(viewModel: viewModel)
-                    .presentationDetents([.small])
+                    .presentationDetents([.medium])
             }
             .padding()
         }
