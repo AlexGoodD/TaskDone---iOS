@@ -7,7 +7,7 @@ struct TaskCard: View {
 
     @State private var visibleTaskCount: Int = 0 
     private let animationDuration: Double = 0.3
-        private let maxVisibleTasks: Int = 5 
+    private let maxVisibleTasks: Int = 5 
 
     var isExpanded: Bool {
         expandedCategoryId == category.id
@@ -15,40 +15,33 @@ struct TaskCard: View {
 
     var body: some View {
         VStack {
-            
             HStack {
                 Text(category.name)
                     .font(isExpanded ? .title : .headline)
                     .bold()
-                    .foregroundColor(category.color)
                 Spacer()
             }
 
-            
             if isExpanded {
                 VStack(spacing: 10) {
-                    
                     HStack {
                         Text("\(category.tasks.filter { $0.isCompleted }.count) of \(category.tasks.count) tasks")
                             .font(.subheadline)
-                            .foregroundColor(category.color)
                         Spacer()
                     }
                     .transition(.opacity)
 
-                    
-                    ForEach(category.tasks.prefix(maxVisibleTasks).indices, id: \.self) { index in
-                        if index < visibleTaskCount {
-                            taskRow(for: category.tasks[index])
+                    ForEach(Array(category.tasks.prefix(maxVisibleTasks)), id: \.id) { task in
+                        if visibleTaskCount > 0 {
+                            taskRow(for: task)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
 
-                    
                     if category.tasks.count > maxVisibleTasks && visibleTaskCount >= maxVisibleTasks {
                         Text("...")
                             .font(.headline)
-                            .foregroundColor(category.color)
+                            .foregroundColor(.gray)
                             .transition(.opacity)
                     }
                 }
@@ -61,7 +54,7 @@ struct TaskCard: View {
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(category.color.opacity(0.2)))
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.red.opacity(0.2)))
         .opacity(isExpanded ? 1.0 : 0.5)
         .onTapGesture {
             withAnimation(.easeInOut(duration: animationDuration)) {
@@ -70,11 +63,10 @@ struct TaskCard: View {
         }
     }
 
-    
     private func taskRow(for task: Task) -> some View {
         HStack {
             Button(action: {
-                viewModel.toggleTaskCompletion(categoryId: category.id, taskId: task.id)
+                viewModel.toggleTaskCompletion(taskId: task.id)
             }) {
                 Image(systemName: task.isCompleted ? "checkmark.square" : "square")
                     .foregroundColor(.accentColor)
@@ -86,7 +78,6 @@ struct TaskCard: View {
         .padding(.vertical, 5)
     }
 
-    
     private func showTasksSequentially() {
         visibleTaskCount = 0
         for index in 0..<category.tasks.count {
@@ -98,7 +89,6 @@ struct TaskCard: View {
         }
     }
 
-    
     private func resetVisibleTasks() {
         visibleTaskCount = 0
     }

@@ -1,8 +1,11 @@
-import SwiftUI
+import Foundation
+import CoreData
 
-struct TaskCategory: Identifiable {
-    var id = UUID()
-    var name: String
-    var color: Color
-    var tasks: [Task]
+@objc(TaskCategory)
+public class TaskCategory: NSManagedObject {
+    @NSManaged public var id: UUID
+    @NSManaged public var name: String
+    @NSManaged public var color: String
+    @NSManaged public var tasks: Set<Task>
 }
+

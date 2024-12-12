@@ -1,7 +1,9 @@
 import SwiftUI
+
 struct ContentView: View {
     @StateObject var viewModel = TaskViewModel()
-    
+    @State private var expandedCategoryId: UUID?
+
     var body: some View {
         NavigationView {
             VStack {
@@ -19,55 +21,44 @@ struct ContentView: View {
                         .foregroundColor(.gray)
                         .bold()
                     Spacer()
-                       
                 }
                 .padding(.horizontal)
                 .padding(.bottom)
                 
                 ScrollView {
-                    ForEach(viewModel.categories) { category in
-                        TaskCard(category: category, expandedCategoryId: $viewModel.expandedCategoryId)
-                            .padding(.horizontal)
-                            .padding(.vertical, 5)
+                    VStack(spacing: 10) {
+                        ForEach(viewModel.categories, id: \.id) { category in
+                            VStack {
+                                TaskCard(category: category, expandedCategoryId: $expandedCategoryId)
+                                    .environmentObject(viewModel)
+                                
+                                if expandedCategoryId == category.id {
+                                    NavigationLink(destination: EditCategoryView(category: .constant(category))) {
+                                        Text("Edit")
+                                            .foregroundColor(.blue)
+                                            .padding()
+                                            .background(Color.gray.opacity(0.2))
+                                            .cornerRadius(8)
+                                    }
+                                    .padding(.top, 5)
+                                }
+                            }
+                        }
                     }
+                    .padding()
                 }
-                
-                
-                NavigationLink(destination: CreateCategoryView().onAppear {
-                    viewModel.collapseAllCategories()
-                }) {
-                    
-                    Text("Crear Nueva Categoría")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                        .padding()
-                }
-                
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    if let expandedCategoryId = viewModel.expandedCategoryId,
-                       let categoryIndex = viewModel.categories.firstIndex(where: { $0.id == expandedCategoryId }) {
-                        NavigationLink(destination: EditCategoryView(category: $viewModel.categories[categoryIndex]).onAppear {
-                            viewModel.collapseAllCategories()
-                        }) {
-                            Image(systemName: "highlighter")
-                                .foregroundColor(.blue)
-                        }
-                    } else {
-                        Image(systemName: "highlighter")
-                            .foregroundColor(.gray)
+                    NavigationLink(destination: CreateCategoryView().environmentObject(viewModel)) {
+                        Image(systemName: "plus")
                     }
                 }
             }
         }
-        .environmentObject(viewModel) 
     }
 }
+
 #Preview {
     ContentView().environmentObject(TaskViewModel())
 }

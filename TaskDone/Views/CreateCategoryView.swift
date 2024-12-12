@@ -3,7 +3,7 @@ import SwiftUI
 struct CreateCategoryView: View {
     @State private var categoryName: String = ""
     @State private var categoryColor: Color = .blue
-    @State private var tasks: [Task] = []
+    @State private var tasks: [LocalTask] = []
     @EnvironmentObject var viewModel: TaskViewModel
     @Environment(\.presentationMode) var presentationMode
     
@@ -12,16 +12,15 @@ struct CreateCategoryView: View {
     var body: some View {
         NavigationView {
             Form {
-                
                 Section(header: Text("Nombre de Categoría")) {
                     TextField("Nombre", text: $categoryName)
                 }
                 
-                
+                /*
                 Section(header: Text("Color de Categoría")) {
                     ColorPicker("Selecciona un Color", selection: $categoryColor)
                 }
-                
+                */
                 
                 Section(header: Text("Tareas")) {
                     ForEach($tasks) { $task in
@@ -39,40 +38,67 @@ struct CreateCategoryView: View {
                         }
                     }
                     Button(action: {
-                        tasks.append(Task(title: "Nueva Tarea", isCompleted: false))
+                        tasks.append(LocalTask(title: "Nueva Tarea", isCompleted: false))
                     }) {
                         Text("Agregar Nueva Tarea")
                     }
                 }
             }
-            .navigationTitle("Crear Categoría")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Guardar") {
-                        if !categoryName.isEmpty {
-                            let newCategory = TaskCategory(name: categoryName, color: categoryColor, tasks: tasks)
-                            
-                            
-                            viewModel.addCategory(name: categoryName, color: categoryColor, tasks: tasks)
-                            onSave?(newCategory)
-                            
-                            
-                            presentationMode.wrappedValue.dismiss()
-                        }
-                    }
-                    .disabled(categoryName.isEmpty) 
-                }
-            }
+            .navigationBarTitle("Crear Categoría", displayMode: .inline)
+            .navigationBarItems(leading: Button("Cancelar") {
+                presentationMode.wrappedValue.dismiss()
+            }, trailing: Button("Guardar") {
+                saveCategory()
+            })
         }
     }
+    
+    private func saveCategory() {
+    
+    let newCategory = TaskCategory(context: viewModel.context)
+    newCategory.id = UUID()
+    newCategory.name = categoryName
+    
+
+    
+    tasks.forEach { task in
+        let newTask = Task(context: viewModel.context)
+        newTask.id = task.id
+        newTask.title = task.title
+        newTask.isCompleted = task.isCompleted
+        newTask.category = newCategory 
+        newCategory.addToTasks(newTask) 
+    }
+
+
+    
+    viewModel.saveContext()
+        viewModel.fetchCategories() 
+
+        viewModel.printCategories()
+    
+    
+    onSave?(newCategory)
+    
+    
+    presentationMode.wrappedValue.dismiss()
+}
 }
 
+struct LocalTask: Identifiable {
+    var id = UUID()
+    var title: String
+    var isCompleted: Bool
+}
 
 struct CreateCategoryView_Previews: PreviewProvider {
     static var previews: some View {
-        CreateCategoryView { newCategory in
+        let context = PersistenceController.preview.container.viewContext
+        let viewModel = TaskViewModel()
+        
+        return CreateCategoryView { newCategory in
             print("Nueva Categoría Creada: \(newCategory)")
         }
-        .environmentObject(TaskViewModel()) 
+        .environmentObject(viewModel)
     }
 }

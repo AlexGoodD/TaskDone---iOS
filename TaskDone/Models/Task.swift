@@ -1,7 +1,10 @@
 import Foundation
+import CoreData
 
-struct Task: Identifiable {
-    var id = UUID()
-    var title: String
-    var isCompleted: Bool
+@objc(Task)
+public class Task: NSManagedObject {
+    @NSManaged public var id: UUID
+    @NSManaged public var title: String
+    @NSManaged public var isCompleted: Bool
+    @NSManaged public var category: TaskCategory?
 }
