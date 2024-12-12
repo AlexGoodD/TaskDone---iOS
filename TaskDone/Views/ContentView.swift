@@ -33,7 +33,10 @@ struct ContentView: View {
                 }
                 
                 
-                NavigationLink(destination: CreateCategoryView()) {
+                NavigationLink(destination: CreateCategoryView().onAppear {
+                    viewModel.collapseAllCategories()
+                }) {
+                    
                     Text("Crear Nueva Categoría")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
@@ -49,7 +52,9 @@ struct ContentView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if let expandedCategoryId = viewModel.expandedCategoryId,
                        let categoryIndex = viewModel.categories.firstIndex(where: { $0.id == expandedCategoryId }) {
-                        NavigationLink(destination: EditCategoryView(category: $viewModel.categories[categoryIndex])) {
+                        NavigationLink(destination: EditCategoryView(category: $viewModel.categories[categoryIndex]).onAppear {
+                            viewModel.collapseAllCategories()
+                        }) {
                             Image(systemName: "highlighter")
                                 .foregroundColor(.blue)
                         }

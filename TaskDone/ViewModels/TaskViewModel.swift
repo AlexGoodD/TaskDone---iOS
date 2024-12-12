@@ -2,14 +2,7 @@ import SwiftUI
 
 class TaskViewModel: ObservableObject {
     @Published var categories: [TaskCategory] = [
-        TaskCategory(name: "Trabajo", color: .blue, tasks: [
-            Task(title: "Terminar el reporte", isCompleted: false),
-            Task(title: "Revisar correos", isCompleted: true)
-        ]),
-        TaskCategory(name: "Casa", color: .green, tasks: [
-            Task(title: "Lavar la ropa", isCompleted: false),
-            Task(title: "Comprar comida", isCompleted: false)
-        ])
+        
     ]
     @Published var isEditing: Bool = false
     @Published var expandedCategoryId: UUID? = nil
@@ -46,4 +39,8 @@ class TaskViewModel: ObservableObject {
     func deleteCategory(categoryId: UUID) {
         categories.removeAll(where: { $0.id == categoryId })
     }
+
+    func collapseAllCategories() {
+    expandedCategoryId = nil
+}
 }
