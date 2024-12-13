@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreData
 
-class TaskViewModel: ObservableObject {
+class TaskViewModel: ObservableObject, Identifiable {
     @Published var categories: [TaskCategory] = []
     let context = PersistenceController.shared.container.viewContext
 
@@ -26,6 +26,12 @@ class TaskViewModel: ObservableObject {
         fetchCategories() 
     }
 
+    func removeCategory(_ category: TaskCategory) {
+    context.delete(category)
+    saveContext()
+    fetchCategories()
+}
+
     func addTask(to categoryId: UUID, title: String) {
         guard let category = categories.first(where: { $0.id == categoryId }) else { return }
         let newTask = Task(context: context)
@@ -39,7 +45,6 @@ class TaskViewModel: ObservableObject {
     }
 
     func toggleTaskCompletion(taskId: UUID) {
-        
         for category in categories {
             if let task = category.tasksArray.first(where: { $0.id == taskId }) {
                 task.isCompleted.toggle()
@@ -49,7 +54,33 @@ class TaskViewModel: ObservableObject {
             }
         }
     }
-    
+
+    func updateTaskTitle(task: Task, newTitle: String) {
+        task.title = newTitle
+        saveContext()
+    }
+
+    func removeTask(task: Task, from category: TaskCategory) {
+        category.removeFromTasks(task)
+        saveContext()
+    }
+
+    func addNewTask(to category: TaskCategory) {
+        let newTask = Task(context: context)
+        newTask.id = UUID()
+        newTask.title = "Nueva Tarea"
+        newTask.isCompleted = false
+        category.addToTasks(newTask)
+        saveContext()
+    }
+
+    func saveCategoryChanges(category: TaskCategory, tempCategory: TaskCategory) {
+        category.name = tempCategory.name
+        category.tasks = tempCategory.tasks
+        saveContext()
+        fetchCategories()
+    }
+
     func printCategories() {
         do {
             for category in categories {
@@ -75,13 +106,11 @@ class TaskViewModel: ObservableObject {
 }
 
 extension TaskCategory {
-    
     var tasksArray: [Task] {
         let set = tasks as? Set<Task> ?? []
         return set.sorted { $0.title < $1.title }
     }
 }
-
 
 extension TaskCategory {
     @objc(addTasksObject:)
