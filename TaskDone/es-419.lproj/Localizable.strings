@@ -5,4 +5,4 @@
 "task-add" = "Escribe una nueva tarea";
 "%d counter-task-of %d counter-tasks" = "%d de %d tareas";
 "category-delete" = "Eliminar";
-"no-available" = "Añade una categoría para empezar";
+"no-available" = "Añade una categoría para empezar...";
