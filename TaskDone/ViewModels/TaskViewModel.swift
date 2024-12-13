@@ -46,17 +46,13 @@ class TaskViewModel: ObservableObject {
         }
     }
     
-    
-    func addTask(to categoryId: UUID, title: String) {
+    func addTask(to categoryId: UUID) {
         guard let category = categories.first(where: { $0.id == categoryId }) else { return }
         guard let entity = NSEntityDescription.entity(forEntityName: "Task", in: context) else {
             print("Error: No se pudo encontrar la entidad 'Task' en el contexto.")
             return
         }
         let newTask = Task(entity: entity, insertInto: context)
-        newTask.id = UUID()
-        newTask.title = title
-        newTask.isCompleted = false
         newTask.category = category
         category.addToTasks(newTask)
         saveContext()
@@ -93,6 +89,7 @@ class TaskViewModel: ObservableObject {
         newTask.id = UUID()
         newTask.title = "Nueva Tarea"
         newTask.isCompleted = false
+        newTask.creationDate = Date() // Fecha de creación
         category.addToTasks(newTask)
         saveContext()
     }

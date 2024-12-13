@@ -2,9 +2,9 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-    @StateObject var viewModel = TaskViewModel()
+    @EnvironmentObject var viewModel: TaskViewModel
     @State private var expandedCategoryId: UUID?
-    
+
     var body: some View {
         NavigationView {
             VStack {
@@ -12,6 +12,7 @@ struct ContentView: View {
                     Text("tasks_title")
                         .font(.largeTitle)
                         .bold()
+                        .foregroundColor(.primary)
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -28,8 +29,16 @@ struct ContentView: View {
                 
                 ScrollView {
                     VStack(spacing: 10) {
-                        ForEach(viewModel.categories, id: \.id) { category in
-                            CategoryRow(category: category, expandedCategoryId: $expandedCategoryId)
+                        if viewModel.categories.isEmpty {
+                            Text("no-available")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .padding()
+                        } else {
+                            ForEach(viewModel.categories, id: \.id) { category in
+                                CategoryRow(category: category, expandedCategoryId: $expandedCategoryId)
+                                    .animation(.easeInOut(duration: 0.3), value: expandedCategoryId)
+                            }
                         }
                     }
                     .padding()
@@ -41,6 +50,7 @@ struct ContentView: View {
                        let category = viewModel.categories.first(where: { $0.id == expandedCategoryId }) {
                         NavigationLink(
                             destination: EditCategoryView(category: .constant(category))
+                                .environmentObject(viewModel)
                                 .onAppear {
                                     withAnimation(.easeInOut(duration: 0.2)) {
                                         self.expandedCategoryId = nil 
@@ -77,6 +87,9 @@ struct ContentView: View {
                     Spacer()
                 }
             }
+            .onAppear {
+                viewModel.fetchCategories()
+            }
         }
         .environmentObject(viewModel) // Asegúrate de pasar el environmentObject aquí
     }
@@ -92,13 +105,13 @@ struct CategoryRow: View {
             .contextMenu {
                 Button(role: .destructive) {
                     withAnimation {
-                        // Si la categoría actual está expandida, colapsarla antes de eliminar
+                        // Si la categoría actual está expandida, colapsarla antes de ocultar
                         if expandedCategoryId == category.id {
                             expandedCategoryId = nil
                         }
 
-                        // Eliminar la categoría
-                        viewModel.removeCategory(category.objectID)
+                        // Ocultar la categoría
+                        viewModel.hideCategory(category.objectID)
                     }
                 } label: {
                     Label("category-delete", systemImage: "trash")
@@ -137,7 +150,7 @@ struct CategoryRow: View {
     exampleCategory.addToTasks(task1)
     exampleCategory.addToTasks(task2)
     
-    let viewModel = TaskViewModel()
+    let viewModel = TaskViewModel(context: exampleContext)
     viewModel.categories = [exampleCategory]
     
     return ContentView()

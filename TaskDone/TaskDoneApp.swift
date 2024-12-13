@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct TaskDoneApp: App {
     let persistenceController: PersistenceController
+    @StateObject private var viewModel = TaskViewModel()
 
     init() {
         #if DEBUG
@@ -24,6 +25,7 @@ struct TaskDoneApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environmentObject(viewModel)
         }
     }
 }

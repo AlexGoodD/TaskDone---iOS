@@ -5,3 +5,4 @@
 "task-add" = "Add your task";
 "%d counter-task-of %d counter-tasks" = "%d of %d tasks";
 "category-delete" = "Delete";
+"no-available" = "Add a new category to started";

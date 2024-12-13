@@ -31,6 +31,7 @@ struct EditCategoryView: View {
     private var categoryNameField: some View {
         TextField("category-name", text: $tempCategory.name)
             .font(.title)
+            .foregroundColor(Color(hex: category.color))
             .fontWeight(.semibold)
             .padding(.horizontal)
             .onChange(of: tempCategory.name) { _ in
@@ -65,16 +66,18 @@ struct EditCategoryView: View {
     private func taskRow(task: Task) -> some View {
         HStack {
             Button(action: {
-                viewModel.toggleTaskCompletion(taskId: task.id)
+                if !task.title.isEmpty && task.title != "task-add" {
+                    viewModel.toggleTaskCompletion(taskId: task.id)
+                }
             }) {
                 Image(systemName: task.isCompleted ? "checkmark.square" : "square")
                     .foregroundColor(Color(hex: category.color))
                     .bold()
             }
-            .disabled(task.title.isEmpty ?? true) // Deshabilitar si la tarea no tiene texto
+            .disabled(task.title.isEmpty || task.title == "task-add")
             
             let taskTitleBinding = Binding(
-                get: { task.title ?? "" },
+                get: { task.title },
                 set: { newValue in
                     if newValue.isEmpty {
                         viewModel.removeTask(task: task, from: tempCategory)
@@ -86,8 +89,9 @@ struct EditCategoryView: View {
             )
             
             TextField("task-add", text: taskTitleBinding)
-                .placeholder(when: task.title.isEmpty ?? true) {
-                    Text("task-add").foregroundColor(.gray)
+                .foregroundColor(Color(hex: category.color))
+                .placeholder(when: task.title.isEmpty) {
+                    Text("task-add").foregroundColor(Color(hex: category.color))
                 }
                 .strikethrough(task.isCompleted)
             Spacer()
@@ -99,7 +103,11 @@ struct EditCategoryView: View {
     private var newTaskRow: some View {
         HStack {
             Button(action: {
-                addNewTask()
+                let trimmedTitle = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmedTitle.isEmpty {
+                    addNewTask(title: trimmedTitle)
+                    newTaskTitle = ""
+                }
             }) {
                 Image(systemName: "square")
                     .foregroundColor(Color(hex: category.color))
@@ -107,6 +115,7 @@ struct EditCategoryView: View {
             }
             TextEditor(text: $newTaskTitle)
                 .frame(height: 40)
+                .foregroundColor(Color(hex: category.color))
                 .onChange(of: newTaskTitle) { newValue in
                     if newValue.contains("\n") {
                         let trimmedTitle = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -117,8 +126,9 @@ struct EditCategoryView: View {
                     }
                 }
                 .onSubmit {
-                    if !newTaskTitle.isEmpty {
-                        addNewTask(title: newTaskTitle)
+                    let trimmedTitle = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmedTitle.isEmpty {
+                        addNewTask(title: trimmedTitle)
                         newTaskTitle = ""
                     }
                 }
@@ -135,12 +145,13 @@ struct EditCategoryView: View {
                 presentationMode.wrappedValue.dismiss()
             }) {
                 Image(systemName: "tray.full")
+                    .foregroundColor(Color(hex: category.color))
             }
         }
         return ToolbarItem(placement: .bottomBar) {
             Menu {
                 Button(role: .destructive) {
-                    viewModel.removeCategory(category.objectID)
+                    viewModel.hideCategory(category.objectID)
                     presentationMode.wrappedValue.dismiss()
                 } label: {
                     Label("category-delete", systemImage: "trash")
@@ -148,15 +159,20 @@ struct EditCategoryView: View {
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .font(.title3)
+                    .foregroundColor(Color(hex: category.color))
             }
         }
     }
     
-    private func addNewTask(title: String = "task-add") {
+    private func addNewTask(title: String) {
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
         let newTask = Task(context: viewModel.context)
         newTask.id = UUID()
         newTask.title = title
         newTask.isCompleted = false
+        newTask.creationDate = Date() // Fecha de creación
         newTask.category = tempCategory
         tempCategory.addToTasks(newTask)
         hasUnsavedChanges = true
