@@ -6,21 +6,32 @@ struct CreateCategoryView: View {
     @State private var categoryColor: Color = .blue
     @State private var tasks: [Task] = []
     @State private var newTaskTitle: String = ""
-    @State private var hasUnsavedChanges = false
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var viewModel: TaskViewModel
-    
+@State private var showAlert = false
     var body: some View {
-        VStack(alignment: .leading) {
-            categoryNameField
-            taskCounter
-            Divider().padding(.horizontal)
-            taskList
+            VStack(alignment: .leading) {
+                categoryNameField
+                taskCounter
+                Divider().padding(.horizontal)
+                taskList
+            }
+            .padding(.top)
+            .toolbar {
+        ToolbarItemGroup(placement: .navigationBarTrailing) {
+            ColorPicker("Select Color", selection: $categoryColor)
+                .labelsHidden()
+               
+
+            Button(action: {
+                saveCategory()
+            }) {
+                Image(systemName: "tray.full")
+                    .foregroundColor(categoryColor)
+            }
         }
-        .padding(.top)
-        .toolbar {
-            toolbarContent
-        }
+    }
+        
     }
     
     private var categoryNameField: some View {
@@ -29,9 +40,7 @@ struct CreateCategoryView: View {
             .foregroundColor(categoryColor)
             .fontWeight(.semibold)
             .padding(.horizontal)
-            .onChange(of: categoryName) { _ in
-                hasUnsavedChanges = true
-            }
+           
     }
     
     private var taskCounter: some View {
@@ -80,7 +89,6 @@ struct CreateCategoryView: View {
                     } else {
                         viewModel.updateTaskTitle(task: task, newTitle: newValue)
                     }
-                    hasUnsavedChanges = true
                 }
             )
             
@@ -128,17 +136,6 @@ struct CreateCategoryView: View {
         .padding(.horizontal)
     }
     
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .navigationBarTrailing) {
-            Button(action: {
-                saveCategory()
-            }) {
-                Image(systemName: "tray.full")
-                    .foregroundColor(categoryColor)
-            }
-        }
-    }
-    
     private func saveCategory() {
         viewModel.addCategory(name: categoryName, color: UIColor(categoryColor).toHexString())
         
@@ -158,9 +155,8 @@ struct CreateCategoryView: View {
         newTask.id = UUID()
         newTask.title = title
         newTask.isCompleted = false
-            newTask.creationDate = Date() // Fecha de creación
+        newTask.creationDate = Date() // Fecha de creación
         tasks.append(newTask)
-        hasUnsavedChanges = true
     }
     
     private func saveTasks(to category: TaskCategory) {

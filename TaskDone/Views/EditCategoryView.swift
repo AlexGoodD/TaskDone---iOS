@@ -4,6 +4,7 @@ import CoreData
 struct EditCategoryView: View {
     @Binding var category: TaskCategory
     @State private var tempCategory: TaskCategory
+    @State private var categoryColor: Color
     @State private var hasUnsavedChanges = false
     @State private var showAlert = false
     @State private var newTaskTitle: String = ""
@@ -13,6 +14,7 @@ struct EditCategoryView: View {
     init(category: Binding<TaskCategory>) {
         self._category = category
         self._tempCategory = State(initialValue: category.wrappedValue)
+        self._categoryColor = State(initialValue: Color(hex: category.wrappedValue.color))
     }
     
     var body: some View {
@@ -24,14 +26,30 @@ struct EditCategoryView: View {
         }
         .padding(.top)
         .toolbar {
-            toolbarContent
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                ColorPicker("Select Color", selection: $categoryColor)
+                    .labelsHidden()
+                    .onChange(of: categoryColor) { newColor in
+                        tempCategory.color = UIColor(newColor).toHexString()
+                        hasUnsavedChanges = true
+                    }
+
+                Button(action: {
+                    viewModel.saveCategoryChanges(category: category, tempCategory: tempCategory)
+                    hasUnsavedChanges = false
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "tray.full")
+                        .foregroundColor(categoryColor)
+                }
+            }
         }
     }
     
     private var categoryNameField: some View {
         TextField("category-name", text: $tempCategory.name)
             .font(.title)
-            .foregroundColor(Color(hex: category.color))
+            .foregroundColor(categoryColor)
             .fontWeight(.semibold)
             .padding(.horizontal)
             .onChange(of: tempCategory.name) { _ in
@@ -46,7 +64,7 @@ struct EditCategoryView: View {
             Text(String(format: NSLocalizedString("%d counter-task-of %d counter-tasks", comment: "Task counters"), completedTasks, totalTasks))
                 .font(.subheadline)
                 .bold()
-                .foregroundColor(Color(hex: category.color))
+                .foregroundColor(categoryColor)
             Spacer()
         }
         .padding(.horizontal)
@@ -71,7 +89,7 @@ struct EditCategoryView: View {
                 }
             }) {
                 Image(systemName: task.isCompleted ? "checkmark.square" : "square")
-                    .foregroundColor(Color(hex: category.color))
+                    .foregroundColor(categoryColor)
                     .bold()
             }
             .disabled(task.title.isEmpty || task.title == "task-add")
@@ -89,9 +107,9 @@ struct EditCategoryView: View {
             )
             
             TextField("task-add", text: taskTitleBinding)
-                .foregroundColor(Color(hex: category.color))
+                .foregroundColor(categoryColor)
                 .placeholder(when: task.title.isEmpty) {
-                    Text("task-add").foregroundColor(Color(hex: category.color))
+                    Text("task-add").foregroundColor(categoryColor)
                 }
                 .strikethrough(task.isCompleted)
             Spacer()
@@ -110,12 +128,12 @@ struct EditCategoryView: View {
                 }
             }) {
                 Image(systemName: "square")
-                    .foregroundColor(Color(hex: category.color))
+                    .foregroundColor(categoryColor)
                     .bold()
             }
             TextEditor(text: $newTaskTitle)
                 .frame(height: 40)
-                .foregroundColor(Color(hex: category.color))
+                .foregroundColor(categoryColor)
                 .onChange(of: newTaskTitle) { newValue in
                     if newValue.contains("\n") {
                         let trimmedTitle = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -136,34 +154,7 @@ struct EditCategoryView: View {
         }
         .padding(.horizontal)
     }
-    
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .navigationBarTrailing) {
-            Button(action: {
-                viewModel.saveCategoryChanges(category: category, tempCategory: tempCategory)
-                hasUnsavedChanges = false
-                presentationMode.wrappedValue.dismiss()
-            }) {
-                Image(systemName: "tray.full")
-                    .foregroundColor(Color(hex: category.color))
-            }
-        }
-        return ToolbarItem(placement: .bottomBar) {
-            Menu {
-                Button(role: .destructive) {
-                    viewModel.hideCategory(category.objectID)
-                    presentationMode.wrappedValue.dismiss()
-                } label: {
-                    Label("category-delete", systemImage: "trash")
-                }
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.title3)
-                    .foregroundColor(Color(hex: category.color))
-            }
-        }
-    }
-    
+
     private func addNewTask(title: String) {
         guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return

@@ -21,18 +21,22 @@ class TaskViewModel: ObservableObject {
     }
     
     func addCategory(name: String, color: String) {
-        guard let entity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: context) else {
-            print("Error: No se pudo encontrar la entidad 'TaskCategory' en el contexto.")
-            return
-        }
-        let newCategory = TaskCategory(entity: entity, insertInto: context)
-        newCategory.id = UUID()
-        newCategory.name = name
-        newCategory.color = color
-        newCategory.isHidden = false
-        saveContext()
-        fetchCategories()
+    guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        print("Error: El nombre de la categoría no puede estar vacío.")
+        return
     }
+    guard let entity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: context) else {
+        print("Error: No se pudo encontrar la entidad 'TaskCategory' en el contexto.")
+        return
+    }
+    let newCategory = TaskCategory(entity: entity, insertInto: context)
+    newCategory.id = UUID()
+    newCategory.name = name
+    newCategory.color = color
+    newCategory.isHidden = false
+    saveContext()
+    fetchCategories()
+}
     
     func hideCategory(_ categoryID: NSManagedObjectID) {
         do {
