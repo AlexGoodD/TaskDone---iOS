@@ -9,7 +9,16 @@ import SwiftUI
 
 @main
 struct TaskDoneApp: App {
-    let persistenceController = PersistenceController.shared
+    let persistenceController: PersistenceController
+
+    init() {
+        #if DEBUG
+        // Usa un contexto in-memory para depuración
+        persistenceController = PersistenceController(inMemory: true)
+        #else
+        persistenceController = PersistenceController.shared
+        #endif
+    }
 
     var body: some Scene {
         WindowGroup {

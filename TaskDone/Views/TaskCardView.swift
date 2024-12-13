@@ -10,7 +10,7 @@ struct TaskCard: View {
     private let maxVisibleTasks: Int = 5 
 
     var isExpanded: Bool {
-        expandedCategoryId == category.id
+        viewModel.categories.contains(where: { $0.id == category.id }) && expandedCategoryId == category.id
     }
 
     var body: some View {
@@ -19,6 +19,7 @@ struct TaskCard: View {
                 Text(category.name)
                     .font(isExpanded ? .title : .headline)
                     .bold()
+                    .foregroundColor(isExpanded ? Color(hex: category.color).darker(by: 20) : Color(hex: category.color).darker(by: 20).opacity(0.5))
                 Spacer()
             }
 
@@ -27,6 +28,8 @@ struct TaskCard: View {
                     HStack {
                         Text("\(category.tasks.filter { $0.isCompleted }.count) of \(category.tasks.count) tasks")
                             .font(.subheadline)
+                            .bold()
+                            .foregroundColor(Color(hex: category.color).darker(by: 20))
                         Spacer()
                     }
                     .transition(.opacity)
@@ -34,6 +37,7 @@ struct TaskCard: View {
                     ForEach(Array(category.tasks.prefix(maxVisibleTasks)), id: \.id) { task in
                         if visibleTaskCount > 0 {
                             taskRow(for: task)
+                                .foregroundColor(Color(hex: category.color).darker(by: 20))
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
@@ -41,7 +45,7 @@ struct TaskCard: View {
                     if category.tasks.count > maxVisibleTasks && visibleTaskCount >= maxVisibleTasks {
                         Text("...")
                             .font(.headline)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color(hex: category.color))
                             .transition(.opacity)
                     }
                 }
@@ -54,11 +58,29 @@ struct TaskCard: View {
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.red.opacity(0.2)))
-        .opacity(isExpanded ? 1.0 : 0.5)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isExpanded ? Color(hex: category.color).opacity(0.3) : Color(hex: category.color).opacity(0.1))
+                .shadow(color: Color(hex: category.color).opacity(0.5), radius: 10, x: 0, y: 5)
+        )
         .onTapGesture {
             withAnimation(.easeInOut(duration: animationDuration)) {
                 expandedCategoryId = isExpanded ? nil : category.id
+            }
+        }
+        .contextMenu {
+            Button(role: .destructive) {
+                withAnimation {
+                    // Si la categoría actual está expandida, colapsarla antes de eliminar
+                    if expandedCategoryId == category.id {
+                        expandedCategoryId = nil
+                    }
+
+                    // Eliminar la categoría
+                    viewModel.removeCategory(category.objectID)
+                }
+            } label: {
+                Label("category-delete", systemImage: "trash")
             }
         }
     }
@@ -69,12 +91,14 @@ struct TaskCard: View {
                 viewModel.toggleTaskCompletion(taskId: task.id)
             }) {
                 Image(systemName: task.isCompleted ? "checkmark.square" : "square")
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color(hex: category.color))
+                    .bold()
             }
             Text(task.title)
                 .strikethrough(task.isCompleted)
             Spacer()
         }
+        .opacity(task.isCompleted ? 0.5 : 1.0)
         .padding(.vertical, 5)
     }
 
@@ -82,9 +106,7 @@ struct TaskCard: View {
         visibleTaskCount = 0
         for index in 0..<category.tasks.count {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.1) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    visibleTaskCount += 1
-                }
+                visibleTaskCount += 1
             }
         }
     }

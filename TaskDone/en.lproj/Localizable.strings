@@ -1,0 +1,7 @@
+// Localizable.strings (English)
+"tasks_title" = "Tasks";
+"tasks_subtitle" = "Create and manage your tasks by category";
+"category-name" = "Category name";
+"task-add" = "Add your task";
+"%d counter-task-of %d counter-tasks" = "%d of %d tasks";
+"category-delete" = "Delete";

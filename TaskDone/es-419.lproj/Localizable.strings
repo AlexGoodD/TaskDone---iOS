@@ -1,6 +1,7 @@
 // Localizable.strings (Español)
 "tasks_title" = "Tareas";
 "tasks_subtitle" = "Crea y maneja tus tareas por categorías";
-"category-name" = "Name of category";
-"task-add" = "Add your task";
-"color-picker" = "Pick a color";
+"category-name" = "Nombre de la categoría";
+"task-add" = "Escribe una nueva tarea";
+"%d counter-task-of %d counter-tasks" = "%d de %d tareas";
+"category-delete" = "Eliminar";

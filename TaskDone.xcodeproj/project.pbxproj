@@ -187,11 +187,13 @@
 				};
 			};
 			buildConfigurationList = A98BF7572D0A667D00272D95 /* Build configuration list for PBXProject "TaskDone" */;
-			developmentRegion = en;
+			developmentRegion = "es-419";
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				"es-419",
 				Base,
+				temp,
 			);
 			mainGroup = A98BF7532D0A667D00272D95;
 			minimizedProjectReferenceProxies = 1;

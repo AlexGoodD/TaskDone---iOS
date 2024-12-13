@@ -3,9 +3,10 @@ import CoreData
 
 class TaskViewModel: ObservableObject, Identifiable {
     @Published var categories: [TaskCategory] = []
-    let context = PersistenceController.shared.container.viewContext
+    let context: NSManagedObjectContext
 
-    init() {
+    init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
+        self.context = context
         fetchCategories()
     }
 
@@ -18,23 +19,45 @@ class TaskViewModel: ObservableObject, Identifiable {
         }
     }
 
-    func addCategory(name: String) {
-        let newCategory = TaskCategory(context: context)
+    func addCategory(name: String, color: String) {
+        guard let entity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: context) else {
+            print("Error: No se pudo encontrar la entidad 'TaskCategory' en el contexto.")
+            return
+        }
+        let newCategory = TaskCategory(entity: entity, insertInto: context)
         newCategory.id = UUID()
         newCategory.name = name
+        newCategory.color = color
         saveContext()
         fetchCategories() 
     }
 
-    func removeCategory(_ category: TaskCategory) {
-    context.delete(category)
-    saveContext()
-    fetchCategories()
+    func removeCategory(_ categoryID: NSManagedObjectID) {
+    do {
+        if let category = try context.existingObject(with: categoryID) as? TaskCategory {
+            // Eliminar todas las tareas relacionadas con la categoría
+            if let tasks = category.tasks as? Set<Task> {
+                for task in tasks {
+                    context.delete(task)
+                }
+            }
+            // Eliminar la categoría
+            context.delete(category)
+            saveContext()
+            fetchCategories()
+        }
+    } catch {
+        print("Error al intentar eliminar la categoría: \(error)")
+    }
 }
 
     func addTask(to categoryId: UUID, title: String) {
         guard let category = categories.first(where: { $0.id == categoryId }) else { return }
-        let newTask = Task(context: context)
+        guard let entity = NSEntityDescription.entity(forEntityName: "Task", in: context) else {
+            print("Error: No se pudo encontrar la entidad 'Task' en el contexto.")
+            return
+        }
+        let newTask = Task(entity: entity, insertInto: context)
         newTask.id = UUID()
         newTask.title = title
         newTask.isCompleted = false
@@ -66,7 +89,11 @@ class TaskViewModel: ObservableObject, Identifiable {
     }
 
     func addNewTask(to category: TaskCategory) {
-        let newTask = Task(context: context)
+        guard let entity = NSEntityDescription.entity(forEntityName: "Task", in: context) else {
+            print("Error: No se pudo encontrar la entidad 'Task' en el contexto.")
+            return
+        }
+        let newTask = Task(entity: entity, insertInto: context)
         newTask.id = UUID()
         newTask.title = "Nueva Tarea"
         newTask.isCompleted = false
@@ -77,6 +104,7 @@ class TaskViewModel: ObservableObject, Identifiable {
     func saveCategoryChanges(category: TaskCategory, tempCategory: TaskCategory) {
         category.name = tempCategory.name
         category.tasks = tempCategory.tasks
+        category.color = tempCategory.color
         saveContext()
         fetchCategories()
     }

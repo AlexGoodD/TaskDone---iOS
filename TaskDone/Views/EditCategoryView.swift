@@ -17,112 +17,142 @@ struct EditCategoryView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            TextField("Nombre de Categoría", text: $tempCategory.name)
-                .font(.title)
-                .foregroundColor(Color(hex: category.color))
-                .padding(.horizontal)
-                .onChange(of: tempCategory.name) { _ in
-                    hasUnsavedChanges = true
-                }
-            
-            HStack {
-                Text("\(category.tasks.filter { $0.isCompleted }.count) of \(category.tasks.count) tasks")
-                    .font(.subheadline)
-                    .foregroundColor(Color(hex: category.color))
-                Spacer()
-            }
-            .padding(.horizontal)
-            
-            ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(Array(tempCategory.tasks), id: \.id) { task in
-                        HStack {
-                            Button(action: {
-                                viewModel.toggleTaskCompletion(taskId: task.id)
-                            }) {
-                                Image(systemName: task.isCompleted ? "checkmark.square" : "square")
-                                    .foregroundColor(Color(hex: category.color))
-                                    .bold()
-                            }
-                            TextField("Título de Tarea", text: Binding(
-                                get: { task.title ?? "" },
-                                set: { newValue in
-                                    if newValue.isEmpty {
-                                        viewModel.removeTask(task: task, from: tempCategory)
-                                    } else {
-                                        viewModel.updateTaskTitle(task: task, newTitle: newValue)
-                                    }
-                                    hasUnsavedChanges = true
-                                }
-                            ))
-                            .strikethrough(task.isCompleted)
-                            Spacer()
-                        }
-                        .opacity(task.isCompleted ? 0.5 : 1.0)
-                        .padding(.horizontal)
-                    }
-                    
-                    HStack {
-                        Button(action: {
-                            addNewTask()
-                        }) {
-                            Image(systemName: "square")
-                                .foregroundColor(Color(hex: category.color))
-                                .bold()
-                        }
-                        TextField("Add task", text: $newTaskTitle)
-                            .onChange(of: newTaskTitle) { newValue in
-                                if newValue.contains("\n") {
-                                    let trimmedTitle = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                                    if !trimmedTitle.isEmpty {
-                                        addNewTask(title: trimmedTitle)
-                                    }
-                                    newTaskTitle = ""
-                                }
-                            }
-                            .onSubmit {
-                                if !newTaskTitle.isEmpty {
-                                    addNewTask(title: newTaskTitle)
-                                    newTaskTitle = ""
-                                }
-                            }
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                }
-            }
+            categoryNameField
+            taskCounter
+            Divider().padding(.horizontal)
+            taskList
         }
+        .padding(.top)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    viewModel.saveCategoryChanges(category: category, tempCategory: tempCategory)
-                    hasUnsavedChanges = false
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "tray.full")
-                }
+            toolbarContent
+        }
+    }
+    
+    private var categoryNameField: some View {
+        TextField("category-name", text: $tempCategory.name)
+            .font(.title)
+            .fontWeight(.semibold)
+            .padding(.horizontal)
+            .onChange(of: tempCategory.name) { _ in
+                hasUnsavedChanges = true
             }
+    }
+    
+    private var taskCounter: some View {
+        HStack {
+            let completedTasks = category.tasks.filter { $0.isCompleted }.count
+            let totalTasks = category.tasks.count
+            Text(String(format: NSLocalizedString("%d counter-task-of %d counter-tasks", comment: "Task counters"), completedTasks, totalTasks))
+                .font(.subheadline)
+                .bold()
+                .foregroundColor(Color(hex: category.color))
+            Spacer()
         }
-        .alert(isPresented: $showAlert) {
-            Alert(
-                title: Text("Cambios sin guardar"),
-                message: Text("Tienes cambios sin guardar. ¿Estás seguro de que quieres salir sin guardar?"),
-                primaryButton: .destructive(Text("Salir")) {
-                    hasUnsavedChanges = false
-                    presentationMode.wrappedValue.dismiss()
-                },
-                secondaryButton: .cancel(Text("Cancelar"))
-            )
-        }
-        .interactiveDismissDisabled(hasUnsavedChanges)
-        .onDisappear {
-            if hasUnsavedChanges {
-                showAlert = true
+        .padding(.horizontal)
+    }
+    
+    private var taskList: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                ForEach(Array(tempCategory.tasks), id: \.id) { task in
+                    taskRow(task: task)
+                }
+                newTaskRow
             }
         }
     }
     
-    private func addNewTask(title: String = "Add task") {
+    private func taskRow(task: Task) -> some View {
+        HStack {
+            Button(action: {
+                viewModel.toggleTaskCompletion(taskId: task.id)
+            }) {
+                Image(systemName: task.isCompleted ? "checkmark.square" : "square")
+                    .foregroundColor(Color(hex: category.color))
+                    .bold()
+            }
+            .disabled(task.title.isEmpty ?? true) // Deshabilitar si la tarea no tiene texto
+            
+            let taskTitleBinding = Binding(
+                get: { task.title ?? "" },
+                set: { newValue in
+                    if newValue.isEmpty {
+                        viewModel.removeTask(task: task, from: tempCategory)
+                    } else {
+                        viewModel.updateTaskTitle(task: task, newTitle: newValue)
+                    }
+                    hasUnsavedChanges = true
+                }
+            )
+            
+            TextField("task-add", text: taskTitleBinding)
+                .placeholder(when: task.title.isEmpty ?? true) {
+                    Text("task-add").foregroundColor(.gray)
+                }
+                .strikethrough(task.isCompleted)
+            Spacer()
+        }
+        .opacity(task.isCompleted ? 0.5 : 1.0)
+        .padding(.horizontal)
+    }
+    
+    private var newTaskRow: some View {
+        HStack {
+            Button(action: {
+                addNewTask()
+            }) {
+                Image(systemName: "square")
+                    .foregroundColor(Color(hex: category.color))
+                    .bold()
+            }
+            TextEditor(text: $newTaskTitle)
+                .frame(height: 40)
+                .onChange(of: newTaskTitle) { newValue in
+                    if newValue.contains("\n") {
+                        let trimmedTitle = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !trimmedTitle.isEmpty {
+                            addNewTask(title: trimmedTitle)
+                        }
+                        newTaskTitle = ""
+                    }
+                }
+                .onSubmit {
+                    if !newTaskTitle.isEmpty {
+                        addNewTask(title: newTaskTitle)
+                        newTaskTitle = ""
+                    }
+                }
+            Spacer()
+        }
+        .padding(.horizontal)
+    }
+    
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItemGroup(placement: .navigationBarTrailing) {
+            Button(action: {
+                viewModel.saveCategoryChanges(category: category, tempCategory: tempCategory)
+                hasUnsavedChanges = false
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Image(systemName: "tray.full")
+            }
+        }
+        return ToolbarItem(placement: .bottomBar) {
+            Menu {
+                Button(role: .destructive) {
+                    viewModel.removeCategory(category.objectID)
+                    presentationMode.wrappedValue.dismiss()
+                } label: {
+                    Label("category-delete", systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.title3)
+            }
+        }
+    }
+    
+    private func addNewTask(title: String = "task-add") {
         let newTask = Task(context: viewModel.context)
         newTask.id = UUID()
         newTask.title = title
@@ -133,47 +163,17 @@ struct EditCategoryView: View {
     }
 }
 
-struct EditCategoryView_Previews: PreviewProvider {
-    static var previews: some View {
+extension View {
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder placeholder: () -> Content) -> some View {
         
-        let exampleContext = PersistenceController.preview.container.viewContext
-        
-        
-        guard let categoryEntity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: exampleContext) else {
-            fatalError("No se pudo encontrar la entidad 'TaskCategory' en el modelo de datos.")
-        }
-        
-        
-        guard let taskEntity = NSEntityDescription.entity(forEntityName: "Task", in: exampleContext) else {
-            fatalError("No se pudo encontrar la entidad 'Task' en el modelo de datos.")
-        }
-        
-        let exampleCategory = TaskCategory(entity: categoryEntity, insertInto: exampleContext)
-        exampleCategory.id = UUID()
-        exampleCategory.name = "Ejemplo Categoría"
-        
-        let task1 = Task(entity: taskEntity, insertInto: exampleContext)
-        task1.id = UUID()
-        task1.title = "Ejemplo Tarea 1"
-        task1.isCompleted = false
-        task1.category = exampleCategory
-        
-        let task2 = Task(entity: taskEntity, insertInto: exampleContext)
-        task2.id = UUID()
-        task2.title = "Ejemplo Tarea 2"
-        task2.isCompleted = true
-        task2.category = exampleCategory
-        
-        exampleCategory.addToTasks(task1)
-        exampleCategory.addToTasks(task2)
-        
-        let viewModel = TaskViewModel()
-        viewModel.categories = [exampleCategory]
-        
-        return NavigationView {
-            EditCategoryView(category: .constant(exampleCategory))
-                .environment(\.managedObjectContext, exampleContext)
-                .environmentObject(viewModel)
+        ZStack(alignment: alignment) {
+            if shouldShow {
+                placeholder()
+            }
+            self
         }
     }
 }
