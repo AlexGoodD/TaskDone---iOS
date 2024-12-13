@@ -3,7 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject var viewModel = TaskViewModel()
     @State private var expandedCategoryId: UUID?
-
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -14,7 +14,7 @@ struct ContentView: View {
                     Spacer()
                 }
                 .padding(.horizontal)
-
+                
                 HStack {
                     Text("Create and manage your task by category")
                         .font(.footnote)
@@ -28,21 +28,8 @@ struct ContentView: View {
                 ScrollView {
                     VStack(spacing: 10) {
                         ForEach(viewModel.categories, id: \.id) { category in
-                            VStack {
-                                TaskCard(category: category, expandedCategoryId: $expandedCategoryId)
-                                    .environmentObject(viewModel)
-                                
-                                if expandedCategoryId == category.id {
-                                    NavigationLink(destination: EditCategoryView(category: .constant(category))) {
-                                        Text("Edit")
-                                            .foregroundColor(.blue)
-                                            .padding()
-                                            .background(Color.gray.opacity(0.2))
-                                            .cornerRadius(8)
-                                    }
-                                    .padding(.top, 5)
-                                }
-                            }
+                            TaskCard(category: category, expandedCategoryId: $expandedCategoryId)
+                                .environmentObject(viewModel)
                         }
                     }
                     .padding()
@@ -50,11 +37,50 @@ struct ContentView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: CreateCategoryView().environmentObject(viewModel)) {
-                        Image(systemName: "plus")
+                    if let expandedCategoryId = expandedCategoryId,
+                       let category = viewModel.categories.first(where: { $0.id == expandedCategoryId }) {
+                        NavigationLink(
+                            destination: EditCategoryView(category: .constant(category))
+                                .onAppear {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        self.expandedCategoryId = nil 
+                                    }
+                                }
+                        ) {
+                            Image(systemName: "highlighter")
+                                .foregroundColor(.blue)
+                        }
+                    } else {
+                        Image(systemName: "highlighter")
+                            .foregroundColor(.gray)
                     }
                 }
             }
+            .overlay(
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        NavigationLink(
+                            destination: CreateCategoryView()
+                                .environmentObject(viewModel)
+                                .onAppear {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        self.expandedCategoryId = nil 
+                                    }
+                                }
+                        ) {
+                            Image(systemName: "plus")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.blue)
+                                .clipShape(Circle())
+                                .shadow(radius: 10)
+                        }
+                        Spacer()
+                    }
+                }
+            )
         }
     }
 }
