@@ -1,8 +1,8 @@
-// Localizable.strings (Español)
-"tasks_title" = "Tareas";
-"tasks_subtitle" = "Crea y maneja tus tareas por categorías";
-"category-name" = "Nombre de la categoría";
-"task-add" = "Escribe una nueva tarea";
-"%d counter-task-of %d counter-tasks" = "%d de %d tareas";
-"category-delete" = "Eliminar";
-"no-available" = "Añade una categoría para empezar...";
+// Localizable.strings (English)
+"tasks_title" = "Tasks";
+"tasks_subtitle" = "Create and manage your tasks by category";
+"category-name" = "Category name";
+"task-add" = "Add your task";
+"%d counter-task-of %d counter-tasks" = "%d of %d tasks";
+"category-delete" = "Delete";
+"no-available" = "Add a new category to started...";

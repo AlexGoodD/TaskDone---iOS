@@ -139,12 +139,14 @@ struct CategoryRow: View {
     task1.id = UUID()
     task1.title = "Ejemplo Tarea 1"
     task1.isCompleted = false
+    task1.creationDate = Date()
     task1.category = exampleCategory
     
     let task2 = Task(entity: taskEntity, insertInto: exampleContext)
     task2.id = UUID()
     task2.title = "Ejemplo Tarea 2"
     task2.isCompleted = true
+    task2.creationDate = Date().addingTimeInterval(-86400) // Un día antes
     task2.category = exampleCategory
     
     exampleCategory.addToTasks(task1)
