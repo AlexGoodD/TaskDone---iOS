@@ -115,13 +115,8 @@ struct TaskCard: View {
     }
 
     private var sortedTasks: [Task] {
-        category.tasks.sorted {
-            if $0.isCompleted == $1.isCompleted {
-                return $0.creationDate < $1.creationDate
-            }
-            return !$0.isCompleted && $1.isCompleted
-        }
-    }
+    category.tasks.sorted { $0.creationDate < $1.creationDate }
+}
 
     private func taskRow(for task: Task) -> some View {
         HStack {

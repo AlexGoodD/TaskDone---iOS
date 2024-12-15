@@ -64,15 +64,16 @@ class TaskViewModel: ObservableObject {
     }
     
     func toggleTaskCompletion(taskId: UUID) {
-        for category in categories {
-            if let task = category.tasksArray.first(where: { $0.id == taskId }) {
-                task.isCompleted.toggle()
-                saveContext()
-                fetchCategories()
-                break
-            }
+    for category in categories {
+        if let task = category.tasksArray.first(where: { $0.id == taskId }) {
+            task.isCompleted.toggle()
+            saveContext()
+                    fetchCategories()
+
+            break
         }
     }
+}
     
     func updateTaskTitle(task: Task, newTitle: String) {
         task.title = newTitle
