@@ -71,15 +71,15 @@ struct EditCategoryView: View {
     }
     
     private var taskList: some View {
-        ScrollView {
-            VStack(spacing: 10) {
-                ForEach(Array(tempCategory.tasks), id: \.id) { task in
-                    taskRow(task: task)
-                }
-                newTaskRow
+    ScrollView {
+        VStack(spacing: 10) {
+            ForEach(tempCategory.tasksArray, id: \.id) { task in
+                taskRow(task: task)
             }
+            newTaskRow
         }
     }
+}
     
     private func taskRow(task: Task) -> some View {
         HStack {

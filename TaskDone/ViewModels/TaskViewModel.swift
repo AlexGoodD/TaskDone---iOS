@@ -134,7 +134,7 @@ class TaskViewModel: ObservableObject {
 extension TaskCategory {
     var tasksArray: [Task] {
         let set = tasks as? Set<Task> ?? []
-        return set.sorted { $0.title < $1.title }
+        return set.sorted { $0.creationDate < $1.creationDate }
     }
 }
 
