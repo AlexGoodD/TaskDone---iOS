@@ -1,10 +1,11 @@
-import SwiftUI
 import CoreData
+import SwiftUI
 
 struct TaskCard: View {
     var category: TaskCategory
     @Binding var expandedCategoryId: UUID?
     @EnvironmentObject var viewModel: TaskViewModel
+    @Environment(\.colorScheme) var colorScheme
 
     @State private var visibleTaskCount: Int = 0
     private let animationDuration: Double = 0.3
@@ -20,17 +21,31 @@ struct TaskCard: View {
 
             if isExpanded {
                 expandedView
+                    .onAppear {
+                        showTasksSequentially()
+                    }
             }
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isExpanded ? Color(hex: category.color).opacity(0.3) : Color(hex: category.color).opacity(0.1))
+                .fill(
+                    isExpanded
+                        ? Color(hex: category.color).opacity(0.3)
+                        : Color(hex: category.color).opacity(0.1)
+                )
                 .shadow(color: Color(hex: category.color).opacity(0.5), radius: 10, x: 0, y: 5)
         )
         .onTapGesture {
             withAnimation(.easeInOut(duration: animationDuration)) {
-                expandedCategoryId = isExpanded ? nil : category.id
+                if isExpanded {
+                    hideTasksSequentially {
+                        expandedCategoryId = nil
+                    }
+                } else {
+                    expandedCategoryId = category.id
+                    visibleTaskCount = 0
+                }
             }
         }
     }
@@ -40,43 +55,64 @@ struct TaskCard: View {
             Text(category.name)
                 .font(isExpanded ? .title : .headline)
                 .bold()
-                .foregroundColor(isExpanded ? Color(hex: category.color).darker(by: 20) : Color(hex: category.color).darker(by: 20).opacity(0.5))
+                .foregroundColor(
+                    isExpanded
+                        ? (colorScheme == .dark
+                            ? Color(hex: category.color)
+                            : Color(hex: category.color).darker(by: 20))
+                        : (colorScheme == .dark
+                            ? Color(hex: category.color).opacity(0.5)
+                            : Color(hex: category.color).darker(by: 20).opacity(0.5)))
             Spacer()
         }
     }
-
 
     private var topFiveTasks: [Task] {
-    Array(sortedTasks.prefix(5))
-}
+        Array(sortedTasks.prefix(5))
+    }
 
-private var expandedView: some View {
-    VStack(spacing: 10) {
-        HStack {
-            Text("\(category.tasks.filter { $0.isCompleted }.count) of \(category.tasks.count) tasks")
+    private var expandedView: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text(
+                    "\(category.tasks.filter { $0.isCompleted }.count) of \(category.tasks.count) tasks"
+                )
                 .font(.subheadline)
                 .bold()
-                .foregroundColor(Color(hex: category.color).darker(by: 20))
-            Spacer()
-        }
-        .transition(.opacity)
+                .foregroundColor(
+                    isExpanded
+                        ? (colorScheme == .dark
+                            ? Color(hex: category.color)
+                            : Color(hex: category.color).darker(by: 20))
+                        : (colorScheme == .dark
+                            ? Color(hex: category.color).opacity(0.5)
+                            : Color(hex: category.color).darker(by: 20).opacity(0.5)))
+                Spacer()
+            }
+            .transition(.opacity)
 
-        
-        ForEach(topFiveTasks, id: \.id) { task in
-            taskRow(for: task)
-                .foregroundColor(Color(hex: category.color).darker(by: 20))
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-        }
+            ForEach(topFiveTasks.prefix(visibleTaskCount), id: \.id) { task in
+                taskRow(for: task)
+                    .foregroundColor(
+                        isExpanded
+                            ? (colorScheme == .dark
+                                ? Color(hex: category.color)
+                                : Color(hex: category.color).darker(by: 20))
+                            : (colorScheme == .dark
+                                ? Color(hex: category.color).opacity(0.5)
+                                : Color(hex: category.color).darker(by: 20).opacity(0.5))
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
 
-        
-        if category.tasks.count > 5 {
-            Text("...")
-                .font(.headline)
-                .foregroundColor(Color(hex: category.color))
-                .transition(.opacity)
+            if category.tasks.count > 5 {
+                Text("...")
+                    .font(.headline)
+                    .foregroundColor(Color(hex: category.color))
+                    .transition(.opacity)
+            }
         }
     }
-}
 
     private var sortedTasks: [Task] {
         category.tasks.sorted {
@@ -93,7 +129,14 @@ private var expandedView: some View {
                 viewModel.toggleTaskCompletion(taskId: task.id)
             }) {
                 Image(systemName: task.isCompleted ? "checkmark.square" : "square")
-                    .foregroundColor(Color(hex: category.color))
+                    .foregroundColor(
+                        isExpanded
+                            ? (colorScheme == .dark ? Color(hex: category.color)
+                                : Color(hex: category.color).darker(by: 20))
+                            : (colorScheme == .dark
+                                ? Color(hex: category.color).opacity(0.5)
+                                : Color(hex: category.color).darker(by: 20).opacity(0.5))
+                    )
                     .bold()
             }
             Text(task.title)
@@ -102,5 +145,29 @@ private var expandedView: some View {
         }
         .opacity(task.isCompleted ? 0.5 : 1.0)
         .padding(.vertical, 5)
+    }
+
+    private func showTasksSequentially() {
+        visibleTaskCount = 0
+        for index in 0..<topFiveTasks.count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.2) {
+                withAnimation {
+                    visibleTaskCount = index + 1
+                }
+            }
+        }
+    }
+
+    private func hideTasksSequentially(completion: @escaping () -> Void) {
+        for index in (0..<visibleTaskCount).reversed() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(visibleTaskCount - index - 1) * 0.2) {
+                withAnimation {
+                    visibleTaskCount = index
+                    if index == 0 {
+                        completion()
+                    }
+                }
+            }
+        }
     }
 }

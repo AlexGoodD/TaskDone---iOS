@@ -31,7 +31,7 @@ struct ContentView: View {
                     VStack(spacing: 10) {
                         if viewModel.categories.isEmpty {
                             Text("no-available")
-                                .font(.headline)
+                                .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .padding()
                         } else {
