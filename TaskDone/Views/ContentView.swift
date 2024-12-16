@@ -103,7 +103,7 @@ struct CategoryRow: View {
     var body: some View {
         TaskCard(category: category, expandedCategoryId: $expandedCategoryId)
             .contextMenu {
-                Button(role: .destructive) {
+                Button(action: {
                     withAnimation {
                         // Si la categoría actual está expandida, colapsarla antes de ocultar
                         if expandedCategoryId == category.id {
@@ -113,8 +113,14 @@ struct CategoryRow: View {
                         // Ocultar la categoría
                         viewModel.hideCategory(category.objectID)
                     }
-                } label: {
+                }) {
                     Label("category-delete", systemImage: "trash")
+                }
+                
+                Button(action: {
+                    viewModel.duplicateCategory(categoryId: category.id)
+                }) {
+                    Label("category-duplicate", systemImage: "doc.on.doc")
                 }
             }
     }

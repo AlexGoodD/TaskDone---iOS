@@ -5,4 +5,6 @@
 "task-add" = "Escribe una nueva tarea";
 "%d counter-task-of %d counter-tasks" = "%d de %d tareas";
 "category-delete" = "Eliminar";
+"category-duplicate" = "Duplicar";
+"category-copy" = "Copia";
 "no-available" = "Añade una categoría para empezar...";

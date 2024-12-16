@@ -107,20 +107,43 @@ class TaskViewModel: ObservableObject {
         fetchCategories()
     }
     
-    func printCategories() {
-        do {
-            for category in categories {
-                print("Categoría: \(category.name ?? "Sin Nombre")")
-                if let tasks = category.tasks as? Set<Task> {
-                    for task in tasks {
-                        print("  - Tarea: \(task.title ?? "Sin Título") (Completada: \(task.isCompleted))")
-                    }
-                }
-            }
-        } catch {
-            print("Error fetching categories: \(error)")
-        }
+    func duplicateCategory(categoryId: UUID) {
+    guard let originalCategory = categories.first(where: { $0.id == categoryId }) else {
+        print("Error: No se pudo encontrar la categoría original.")
+        return
     }
+    
+    guard let entity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: context) else {
+        print("Error: No se pudo encontrar la entidad 'TaskCategory' en el contexto.")
+        return
+    }
+    
+    let newCategory = TaskCategory(entity: entity, insertInto: context)
+    newCategory.id = UUID()
+    let copySuffix = NSLocalizedString("category-copy", comment: "Copia")
+    newCategory.name = originalCategory.name + " (\(copySuffix))"
+    newCategory.color = originalCategory.color
+    newCategory.isHidden = originalCategory.isHidden
+    
+    for task in originalCategory.tasksArray {
+        guard let taskEntity = NSEntityDescription.entity(forEntityName: "Task", in: context) else {
+            print("Error: No se pudo encontrar la entidad 'Task' en el contexto.")
+            return
+        }
+        
+        let newTask = Task(entity: taskEntity, insertInto: context)
+        newTask.id = UUID()
+        newTask.title = task.title
+        newTask.isCompleted = task.isCompleted
+        newTask.creationDate = task.creationDate
+        newTask.category = newCategory
+        
+        newCategory.addToTasks(newTask)
+    }
+    
+    saveContext()
+    fetchCategories()
+}
     
     func saveContext() {
         do {

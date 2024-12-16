@@ -33,7 +33,7 @@ struct EditCategoryView: View {
                         tempCategory.color = UIColor(newColor).toHexString()
                         hasUnsavedChanges = true
                     }
-
+/*
                 Button(action: {
                     viewModel.saveCategoryChanges(category: category, tempCategory: tempCategory)
                     hasUnsavedChanges = false
@@ -41,7 +41,7 @@ struct EditCategoryView: View {
                 }) {
                     Image(systemName: "tray.full")
                         .foregroundColor(categoryColor)
-                }
+                }*/
             }
         }
     }
