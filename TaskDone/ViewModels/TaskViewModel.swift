@@ -43,7 +43,7 @@ class TaskViewModel: ObservableObject {
             if let category = try context.existingObject(with: categoryID) as? TaskCategory {
                 category.isHidden = true
                 saveContext()
-                fetchCategories()
+                //fetchCategories()
             }
         } catch {
             print("Error al intentar ocultar la categoría: \(error)")

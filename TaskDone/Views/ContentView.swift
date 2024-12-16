@@ -114,7 +114,7 @@ struct CategoryRow: View {
                         // Ocultar la categoría
                         viewModel.hideCategory(category.objectID)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             viewModel.fetchCategories()
                         }
