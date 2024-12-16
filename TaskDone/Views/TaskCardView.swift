@@ -39,21 +39,27 @@ struct TaskCard: View {
                 .shadow(color: Color(hex: category.color).opacity(0.5), radius: 10, x: 0, y: 5)
         )
         .onTapGesture {
-            if isExpanded {
-                hideTasksSequentially {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration) {
-                        withAnimation(.easeInOut(duration: animationDuration)) {
-                            expandedCategoryId = nil
-                        }
+    if isExpanded {
+        if visibleTaskCount == 0 {
+            withAnimation(.easeInOut(duration: animationDuration)) {
+                expandedCategoryId = nil
+            }
+        } else {
+            hideTasksSequentially {
+                DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration) {
+                    withAnimation(.easeInOut(duration: animationDuration)) {
+                        expandedCategoryId = nil
                     }
-                }
-            } else {
-                withAnimation(.easeInOut(duration: animationDuration)) {
-                    expandedCategoryId = category.id
-                    visibleTaskCount = 0
                 }
             }
         }
+    } else {
+        withAnimation(.easeInOut(duration: animationDuration)) {
+            expandedCategoryId = category.id
+            visibleTaskCount = 0
+        }
+    }
+}
     }
 
     private var headerView: some View {
@@ -161,7 +167,11 @@ struct TaskCard: View {
         }
     }
 
-    private func hideTasksSequentially(completion: @escaping () -> Void) {
+      private func hideTasksSequentially(completion: @escaping () -> Void) {
+        if visibleTaskCount == 0 {
+            completion()
+            return
+        }
         for index in (0..<visibleTaskCount).reversed() {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(visibleTaskCount - index - 1) * 0.2) {
                 withAnimation {

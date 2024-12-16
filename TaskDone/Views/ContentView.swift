@@ -38,6 +38,7 @@ struct ContentView: View {
                             ForEach(viewModel.categories, id: \.id) { category in
                                 CategoryRow(category: category, expandedCategoryId: $expandedCategoryId)
                                     .animation(.easeInOut(duration: 0.3), value: expandedCategoryId)
+                                    .transition(.opacity)
                             }
                         }
                     }
@@ -104,7 +105,7 @@ struct CategoryRow: View {
         TaskCard(category: category, expandedCategoryId: $expandedCategoryId)
             .contextMenu {
                 Button(action: {
-                    withAnimation {
+                    withAnimation(.easeInOut(duration: 0.3)) {
                         // Si la categoría actual está expandida, colapsarla antes de ocultar
                         if expandedCategoryId == category.id {
                             expandedCategoryId = nil
@@ -112,6 +113,11 @@ struct CategoryRow: View {
 
                         // Ocultar la categoría
                         viewModel.hideCategory(category.objectID)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            viewModel.fetchCategories()
+                        }
                     }
                 }) {
                     Label("category-delete", systemImage: "trash")
@@ -123,45 +129,11 @@ struct CategoryRow: View {
                     Label("category-duplicate", systemImage: "doc.on.doc")
                 }
             }
+            .transition(.opacity)
     }
 }
 
 #Preview {
-    let exampleContext = PersistenceController.preview.container.viewContext
-    
-    guard let categoryEntity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: exampleContext) else {
-        fatalError("No se pudo encontrar la entidad 'TaskCategory' en el modelo de datos.")
-    }
-    
-    guard let taskEntity = NSEntityDescription.entity(forEntityName: "Task", in: exampleContext) else {
-        fatalError("No se pudo encontrar la entidad 'Task' en el modelo de datos.")
-    }
-    
-    let exampleCategory = TaskCategory(entity: categoryEntity, insertInto: exampleContext)
-    exampleCategory.id = UUID()
-    exampleCategory.name = "Ejemplo Categoría"
-    
-    let task1 = Task(entity: taskEntity, insertInto: exampleContext)
-    task1.id = UUID()
-    task1.title = "Ejemplo Tarea 1"
-    task1.isCompleted = false
-    task1.creationDate = Date()
-    task1.category = exampleCategory
-    
-    let task2 = Task(entity: taskEntity, insertInto: exampleContext)
-    task2.id = UUID()
-    task2.title = "Ejemplo Tarea 2"
-    task2.isCompleted = true
-    task2.creationDate = Date().addingTimeInterval(-86400) // Un día antes
-    task2.category = exampleCategory
-    
-    exampleCategory.addToTasks(task1)
-    exampleCategory.addToTasks(task2)
-    
-    let viewModel = TaskViewModel(context: exampleContext)
-    viewModel.categories = [exampleCategory]
-    
-    return ContentView()
-        .environment(\.managedObjectContext, exampleContext)
-        .environmentObject(viewModel)
+    ContentView()
+        .environmentObject(TaskViewModel())
 }
