@@ -8,41 +8,38 @@ struct CreateCategoryView: View {
     @State private var newTaskTitle: String = ""
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var viewModel: TaskViewModel
-@State private var showAlert = false
-    var body: some View {
-            VStack(alignment: .leading) {
-                categoryNameField
-                taskCounter
-                Divider().padding(.horizontal)
-                taskList
-            }
-            .padding(.top)
-            .toolbar {
-        ToolbarItemGroup(placement: .navigationBarTrailing) {
-            ColorPicker("Select Color", selection: $categoryColor)
-                .labelsHidden()
-               
+    @State private var showAlert = false
 
-            Button(action: {
-                saveCategory()
-            }) {
-                Image(systemName: "tray.full")
-                    .foregroundColor(categoryColor)
+    var body: some View {
+        VStack(alignment: .leading) {
+            categoryNameField
+            taskCounter
+            Divider().padding(.horizontal)
+            taskList
+        }
+        .padding(.top)
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                ColorPicker("Select Color", selection: $categoryColor)
+                    .labelsHidden()
+                Button(action: {
+                    viewModel.saveCategory(name: categoryName, color: UIColor(categoryColor), tasks: tasks, presentationMode: presentationMode)
+                }) {
+                    Image(systemName: "tray.full")
+                        .foregroundColor(categoryColor)
+                }
             }
         }
     }
-        
-    }
-    
+
     private var categoryNameField: some View {
         TextField("category-name", text: $categoryName)
             .font(.title)
             .foregroundColor(categoryColor)
             .fontWeight(.semibold)
             .padding(.horizontal)
-           
     }
-    
+
     private var taskCounter: some View {
         HStack {
             let completedTasks = tasks.filter { $0.isCompleted }.count
@@ -55,7 +52,7 @@ struct CreateCategoryView: View {
         }
         .padding(.horizontal)
     }
-    
+
     private var taskList: some View {
         ScrollView {
             VStack(spacing: 10) {
@@ -66,7 +63,7 @@ struct CreateCategoryView: View {
             }
         }
     }
-    
+
     private func taskRow(task: Task) -> some View {
         HStack {
             Button(action: {
@@ -103,11 +100,12 @@ struct CreateCategoryView: View {
         .opacity(task.isCompleted ? 0.5 : 1.0)
         .padding(.horizontal)
     }
-    
+
     private var newTaskRow: some View {
         HStack {
             Button(action: {
-                addNewTask()
+                viewModel.addNewTask(title: newTaskTitle, to: &tasks)
+                newTaskTitle = ""
             }) {
                 Image(systemName: "square")
                     .foregroundColor(categoryColor)
@@ -120,51 +118,20 @@ struct CreateCategoryView: View {
                     if newValue.contains("\n") {
                         let trimmedTitle = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
                         if !trimmedTitle.isEmpty {
-                            addNewTask(title: trimmedTitle)
+                            viewModel.addNewTask(title: trimmedTitle, to: &tasks)
                         }
                         newTaskTitle = ""
                     }
                 }
                 .onSubmit {
                     if !newTaskTitle.isEmpty {
-                        addNewTask(title: newTaskTitle)
+                        viewModel.addNewTask(title: newTaskTitle, to: &tasks)
                         newTaskTitle = ""
                     }
                 }
             Spacer()
         }
         .padding(.horizontal)
-    }
-    
-    private func saveCategory() {
-        viewModel.addCategory(name: categoryName, color: UIColor(categoryColor).toHexString())
-        
-        if let newCategory = viewModel.categories.first(where: { $0.name == categoryName }) {
-            saveTasks(to: newCategory)
-        }
-        
-        presentationMode.wrappedValue.dismiss()
-    }
-    
-    private func addNewTask(title: String = "task-add") {
-        guard let entity = NSEntityDescription.entity(forEntityName: "Task", in: viewModel.context) else {
-            print("Error: No se pudo encontrar la entidad 'Task' en el contexto.")
-            return
-        }
-        let newTask = Task(entity: entity, insertInto: viewModel.context)
-        newTask.id = UUID()
-        newTask.title = title
-        newTask.isCompleted = false
-        newTask.creationDate = Date() // Fecha de creación
-        tasks.append(newTask)
-    }
-    
-    private func saveTasks(to category: TaskCategory) {
-        for task in tasks {
-            task.category = category
-            category.addToTasks(task)
-        }
-        viewModel.saveContext()
     }
 }
 
