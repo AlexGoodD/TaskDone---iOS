@@ -123,16 +123,20 @@ class TaskViewModel: ObservableObject {
         saveContext() // Guardar el contexto inmediatamente después de agregar una nueva tarea
     }
     
-    func addNewTask(to category: TaskCategory) {
+    func addNewTask(to category: TaskCategory, title: String) {
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
         guard let entity = NSEntityDescription.entity(forEntityName: "Task", in: context) else {
             print("Error: No se pudo encontrar la entidad 'Task' en el contexto.")
             return
         }
         let newTask = Task(entity: entity, insertInto: context)
         newTask.id = UUID()
-        newTask.title = "Nueva Tarea"
+        newTask.title = title
         newTask.isCompleted = false
         newTask.creationDate = Date() // Fecha de creación
+        newTask.category = category
         category.addToTasks(newTask)
         saveContext()
     }

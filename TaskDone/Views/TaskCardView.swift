@@ -39,27 +39,32 @@ struct TaskCard: View {
                 .shadow(color: Color(hex: category.color).opacity(0.5), radius: 10, x: 0, y: 5)
         )
         .onTapGesture {
-    if isExpanded {
-        if visibleTaskCount == 0 {
-            withAnimation(.easeInOut(duration: animationDuration)) {
-                expandedCategoryId = nil
-            }
-        } else {
-            hideTasksSequentially {
-                DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration) {
+            if isExpanded {
+                if visibleTaskCount == 0 {
                     withAnimation(.easeInOut(duration: animationDuration)) {
                         expandedCategoryId = nil
                     }
+                } else {
+                    hideTasksSequentially {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration) {
+                            withAnimation(.easeInOut(duration: animationDuration)) {
+                                expandedCategoryId = nil
+                            }
+                        }
+                    }
+                }
+            } else {
+                withAnimation(.easeInOut(duration: animationDuration)) {
+                    expandedCategoryId = category.id
+                    visibleTaskCount = 0
                 }
             }
         }
-    } else {
-        withAnimation(.easeInOut(duration: animationDuration)) {
-            expandedCategoryId = category.id
-            visibleTaskCount = 0
+        .onAppear {
+            if !isExpanded {
+                prepareVisibleTasks()
+            }
         }
-    }
-}
     }
 
     private var headerView: some View {
@@ -167,7 +172,7 @@ struct TaskCard: View {
         }
     }
 
-      private func hideTasksSequentially(completion: @escaping () -> Void) {
+    private func hideTasksSequentially(completion: @escaping () -> Void) {
         if visibleTaskCount == 0 {
             completion()
             return
@@ -182,5 +187,36 @@ struct TaskCard: View {
                 }
             }
         }
+    }
+}
+
+struct TaskCardView_Previews: PreviewProvider {
+    static var previews: some View {
+        let context = PersistenceController.preview.container.viewContext
+        let viewModel = TaskViewModel(context: context)
+        
+        // Crear una categoría de ejemplo
+        let categoryEntity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: context)!
+        let exampleCategory = TaskCategory(entity: categoryEntity, insertInto: context)
+        exampleCategory.id = UUID()
+        exampleCategory.name = "Ejemplo Categoría"
+        exampleCategory.color = "#FF5733"
+        
+        // Crear algunas tareas de ejemplo
+        let taskEntity = NSEntityDescription.entity(forEntityName: "Task", in: context)!
+        for i in 1...5 {
+            let task = Task(entity: taskEntity, insertInto: context)
+            task.id = UUID()
+            task.title = "Tarea \(i)"
+            task.isCompleted = false
+            task.creationDate = Date()
+            task.category = exampleCategory
+            exampleCategory.addToTasks(task)
+        }
+        
+        return TaskCard(category: exampleCategory, expandedCategoryId: .constant(nil))
+            .environmentObject(viewModel)
+            .previewLayout(.sizeThatFits)
+            .padding()
     }
 }

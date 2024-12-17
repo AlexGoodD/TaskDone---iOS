@@ -33,15 +33,6 @@ struct EditCategoryView: View {
                         tempCategory.color = UIColor(newColor).toHexString()
                         hasUnsavedChanges = true
                     }
-/*
-                Button(action: {
-                    viewModel.saveCategoryChanges(category: category, tempCategory: tempCategory)
-                    hasUnsavedChanges = false
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "tray.full")
-                        .foregroundColor(categoryColor)
-                }*/
             }
         }
     }
@@ -182,5 +173,28 @@ extension View {
             }
             self
         }
+    }
+}
+
+struct EditCategoryView_Previews: PreviewProvider {
+    static var previews: some View {
+        let context = PersistenceController.preview.container.viewContext
+        let viewModel = TaskViewModel(context: context)
+        
+        // Crear una categoría de ejemplo
+        let categoryEntity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: context)!
+        var exampleCategory = TaskCategory(entity: categoryEntity, insertInto: context)
+        exampleCategory.id = UUID()
+        exampleCategory.name = "Ejemplo Categoría"
+        exampleCategory.color = "#FF5733"
+        
+        // Crear un Binding para la categoría de ejemplo
+        let categoryBinding = Binding<TaskCategory>(
+            get: { exampleCategory },
+            set: { exampleCategory = $0 }
+        )
+        
+        return EditCategoryView(category: categoryBinding)
+            .environmentObject(viewModel)
     }
 }
