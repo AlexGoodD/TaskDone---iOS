@@ -5,7 +5,6 @@ struct EditCategoryView: View {
     @Binding var category: TaskCategory
     @State private var tempCategory: TaskCategory
     @State private var categoryColor: Color
-    @State private var hasUnsavedChanges = false
     @State private var showAlert = false
     @State private var newTaskTitle: String = ""
     @Environment(\.presentationMode) var presentationMode
@@ -29,12 +28,16 @@ struct EditCategoryView: View {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 ColorPicker("Select Color", selection: $categoryColor)
                     .labelsHidden()
-                    .onChange(of: categoryColor) { newColor in
-                        tempCategory.color = UIColor(newColor).toHexString()
-                        hasUnsavedChanges = true
-                    }
             }
         }
+        
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: Button(action: {
+            presentationMode.wrappedValue.dismiss()
+        }) {
+            Image(systemName: "chevron.left")
+                .foregroundColor(.blue)
+        })
     }
     
     private var categoryNameField: some View {
@@ -43,9 +46,6 @@ struct EditCategoryView: View {
             .foregroundColor(categoryColor)
             .fontWeight(.semibold)
             .padding(.horizontal)
-            .onChange(of: tempCategory.name) { _ in
-                hasUnsavedChanges = true
-            }
     }
     
     private var taskCounter: some View {
@@ -62,15 +62,15 @@ struct EditCategoryView: View {
     }
     
     private var taskList: some View {
-    ScrollView {
-        VStack(spacing: 10) {
-            ForEach(tempCategory.tasksArray, id: \.id) { task in
-                taskRow(task: task)
+        ScrollView {
+            VStack(spacing: 10) {
+                ForEach(tempCategory.tasksArray, id: \.id) { task in
+                    taskRow(task: task)
+                }
+                newTaskRow
             }
-            newTaskRow
         }
     }
-}
     
     private func taskRow(task: Task) -> some View {
         HStack {
@@ -93,7 +93,6 @@ struct EditCategoryView: View {
                     } else {
                         viewModel.updateTaskTitle(task: task, newTitle: newValue)
                     }
-                    hasUnsavedChanges = true
                 }
             )
             
@@ -145,7 +144,7 @@ struct EditCategoryView: View {
         }
         .padding(.horizontal)
     }
-
+    
     private func addNewTask(title: String) {
         guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
@@ -157,7 +156,6 @@ struct EditCategoryView: View {
         newTask.creationDate = Date() // Fecha de creación
         newTask.category = tempCategory
         tempCategory.addToTasks(newTask)
-        hasUnsavedChanges = true
     }
 }
 
@@ -166,14 +164,14 @@ extension View {
         when shouldShow: Bool,
         alignment: Alignment = .leading,
         @ViewBuilder placeholder: () -> Content) -> some View {
-        
-        ZStack(alignment: alignment) {
-            if shouldShow {
-                placeholder()
+            
+            ZStack(alignment: alignment) {
+                if shouldShow {
+                    placeholder()
+                }
+                self
             }
-            self
         }
-    }
 }
 
 struct EditCategoryView_Previews: PreviewProvider {

@@ -9,9 +9,9 @@ struct CreateCategoryView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var viewModel: TaskViewModel
     @State private var showAlert = false
-
+    
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack {
             categoryNameField
             taskCounter
             Divider().padding(.horizontal)
@@ -26,12 +26,34 @@ struct CreateCategoryView: View {
                     viewModel.saveCategory(name: categoryName, color: UIColor(categoryColor), tasks: tasks, presentationMode: presentationMode)
                 }) {
                     Image(systemName: "tray.full")
-                        .foregroundColor(categoryColor)
+                        .foregroundColor(categoryName.isEmpty ? Color.gray : categoryColor)
                 }
+                .disabled(categoryName.isEmpty)
             }
         }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text("unsaved-changes"),
+                message: Text("unsaved-message"),
+                primaryButton: .destructive(Text("discard-button")) {
+                    presentationMode.wrappedValue.dismiss()
+                },
+                secondaryButton: .cancel()
+            )
+        }
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: Button(action: {
+            if !categoryName.isEmpty || !tasks.isEmpty {
+                showAlert = true
+            } else {
+                presentationMode.wrappedValue.dismiss()
+            }
+        }) {
+            Image(systemName: "chevron.left")
+                .foregroundColor(.blue)
+        })
     }
-
+    
     private var categoryNameField: some View {
         TextField("category-name", text: $categoryName)
             .font(.title)
@@ -39,7 +61,7 @@ struct CreateCategoryView: View {
             .fontWeight(.semibold)
             .padding(.horizontal)
     }
-
+    
     private var taskCounter: some View {
         HStack {
             let completedTasks = tasks.filter { $0.isCompleted }.count
@@ -52,7 +74,7 @@ struct CreateCategoryView: View {
         }
         .padding(.horizontal)
     }
-
+    
     private var taskList: some View {
         ScrollView {
             VStack(spacing: 10) {
@@ -63,7 +85,7 @@ struct CreateCategoryView: View {
             }
         }
     }
-
+    
     private func taskRow(task: Task) -> some View {
         HStack {
             Button(action: {
@@ -100,7 +122,7 @@ struct CreateCategoryView: View {
         .opacity(task.isCompleted ? 0.5 : 1.0)
         .padding(.horizontal)
     }
-
+    
     private var newTaskRow: some View {
         HStack {
             Button(action: {

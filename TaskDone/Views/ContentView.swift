@@ -4,7 +4,7 @@ import CoreData
 struct ContentView: View {
     @EnvironmentObject var viewModel: TaskViewModel
     @State private var expandedCategoryId: UUID?
-
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -54,7 +54,7 @@ struct ContentView: View {
                                 .environmentObject(viewModel)
                                 .onAppear {
                                     withAnimation(.easeInOut(duration: 0.2)) {
-                                        self.expandedCategoryId = nil 
+                                        self.expandedCategoryId = nil
                                     }
                                 }
                         ) {
@@ -73,7 +73,7 @@ struct ContentView: View {
                             .environmentObject(viewModel)
                             .onAppear {
                                 withAnimation(.easeInOut(duration: 0.2)) {
-                                    self.expandedCategoryId = nil 
+                                    self.expandedCategoryId = nil
                                 }
                             }
                     ) {
@@ -110,12 +110,12 @@ struct CategoryRow: View {
                         if expandedCategoryId == category.id {
                             expandedCategoryId = nil
                         }
-
+                        
                         // Ocultar la categoría
                         viewModel.hideCategory(category.objectID)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation(.easeInOut(duration: 0.6)) {
                             viewModel.fetchCategories()
                         }
                     }
