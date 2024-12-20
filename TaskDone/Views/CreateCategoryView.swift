@@ -26,6 +26,7 @@ struct CreateCategoryView: View {
                     .labelsHidden()
                 Button(action: {
                     viewModel.saveCategory(name: categoryName, color: UIColor(categoryColor), tasks: tasks, presentationMode: presentationMode)
+                    presentationMode.wrappedValue.dismiss()
                 }) {
                     Image(systemName: "tray.full")
                         .foregroundColor(categoryName.isEmpty ? Color.gray : categoryColor)
@@ -34,7 +35,7 @@ struct CreateCategoryView: View {
             }
         }
         
-        .alert(isPresented: $showAlert) {
+         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text("unsaved-changes"),
                 message: Text("unsaved-message"),
@@ -45,16 +46,23 @@ struct CreateCategoryView: View {
             )
         }
         .navigationBarBackButtonHidden(true)
-        .navigationBarItems(leading: Button(action: {
-            if !categoryName.isEmpty || !tasks.isEmpty {
-                showAlert = true
-            } else {
-                presentationMode.wrappedValue.dismiss()
+        .navigationBarItems(leading: leadingNavigationBarItem)
+    }
+    
+    @ViewBuilder
+    private var leadingNavigationBarItem: some View {
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            Button(action: {
+                if !categoryName.isEmpty || !tasks.isEmpty {
+                    showAlert = true
+                } else {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }) {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(categoryColor)
             }
-        }) {
-            Image(systemName: "chevron.left")
-                .foregroundColor(.blue)
-        })
+        }
     }
         
     

@@ -51,12 +51,19 @@ struct EditCategoryView: View {
         )
         
         .navigationBarBackButtonHidden(true)
-        .navigationBarItems(leading: Button(action: {
-            presentationMode.wrappedValue.dismiss()
-        }) {
-            Image(systemName: "chevron.left")
-                .foregroundColor(.blue)
-        })
+        .navigationBarItems(leading: leadingNavigationBarItem)
+    }
+    
+    @ViewBuilder
+    private var leadingNavigationBarItem: some View {
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+            }) {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(categoryColor)
+            }
+        }
     }
     
     private var categoryNameField: some View {
