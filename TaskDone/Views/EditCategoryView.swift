@@ -4,11 +4,16 @@ import CoreData
 struct EditCategoryView: View {
     @Binding var category: TaskCategory
     @State private var tempCategory: TaskCategory
-    @State private var categoryColor: Color
+    @State private var categoryColor: Color {
+        didSet {
+            tempCategory.color = categoryColor.toUIColor().toHexString()
+        }
+    }
     @State private var showAlert = false
     @State private var newTaskTitle: String = ""
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var viewModel: TaskViewModel
+    @State private var isClose = false
     
     init(category: Binding<TaskCategory>) {
         self._category = category
@@ -22,14 +27,28 @@ struct EditCategoryView: View {
             taskCounter
             Divider().padding(.horizontal)
             taskList
+            
+                .onChange(of: viewModel.categories) { categories in
+                   if !categories.contains(where: { $0.id == category.id }) {
+                        isClose = true
+                    }
+                }
         }
         .padding(.top)
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 ColorPicker("Select Color", selection: $categoryColor)
                     .labelsHidden()
+                    .onChange(of: categoryColor){ newValue in
+                        tempCategory.color = newValue.toUIColor().toHexString()
+                    }
             }
         }
+        .background(
+            NavigationLink(destination: CreateCategoryView(), isActive: $isClose) {
+                EmptyView()
+            }
+        )
         
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action: {
@@ -125,20 +144,14 @@ struct EditCategoryView: View {
                 .frame(height: 40)
                 .foregroundColor(categoryColor)
                 .onChange(of: newTaskTitle) { newValue in
-                    if newValue.contains("\n") {
-                        let trimmedTitle = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !trimmedTitle.isEmpty {
-                            addNewTask(title: trimmedTitle)
-                        }
-                        newTaskTitle = ""
+                if newValue.contains("\n") {
+                    addNewTask(title: newValue.trimmingCharacters(in: .whitespacesAndNewlines))
+                    newTaskTitle = ""
                     }
                 }
                 .onSubmit {
-                    let trimmedTitle = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !trimmedTitle.isEmpty {
-                        addNewTask(title: trimmedTitle)
-                        newTaskTitle = ""
-                    }
+                    addNewTask(title: newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines))
+                    newTaskTitle = ""
                 }
             Spacer()
         }
@@ -146,9 +159,6 @@ struct EditCategoryView: View {
     }
     
     private func addNewTask(title: String) {
-        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return
-        }
         let newTask = Task(context: viewModel.context)
         newTask.id = UUID()
         newTask.title = title

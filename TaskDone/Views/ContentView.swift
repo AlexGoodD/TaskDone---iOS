@@ -106,16 +106,15 @@ struct CategoryRow: View {
             .contextMenu {
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        // Si la categoría actual está expandida, colapsarla antes de ocultar
+                        /* Si la categoría actual está expandida, colapsarla antes de ocultar */
                         if expandedCategoryId == category.id {
                             expandedCategoryId = nil
                         }
                         
-                        // Ocultar la categoría
                         viewModel.hideCategory(category.objectID)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        withAnimation(.easeInOut(duration: 0.6)) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
                             viewModel.fetchCategories()
                         }
                     }

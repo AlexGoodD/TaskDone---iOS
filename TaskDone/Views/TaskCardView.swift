@@ -38,6 +38,7 @@ struct TaskCard: View {
                 )
                 .shadow(color: Color(hex: category.color).opacity(0.5), radius: 10, x: 0, y: 5)
         )
+        .clipped() //Para evitar que sobresalgan elementos fuera de la carta
         .onTapGesture {
             if isExpanded {
                 if visibleTaskCount == 0 {
@@ -117,11 +118,17 @@ struct TaskCard: View {
                     )
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
-            
-            if category.tasks.count > 5 {
+            if visibleTaskCount == visibleTasks.count && visibleTaskCount == maxVisibleTasks{
                 Text("...")
-                    .font(.headline)
-                    .foregroundColor(Color(hex: category.color))
+                    .foregroundColor(
+                        isExpanded
+                        ? (colorScheme == .dark
+                           ? Color(hex: category.color)
+                           : Color(hex: category.color).darker(by: 20))
+                        : (colorScheme == .dark
+                           ? Color(hex: category.color).opacity(0.5)
+                           : Color(hex: category.color).darker(by: 20).opacity(0.5))
+                    )
                     .transition(.opacity)
             }
         }
@@ -187,36 +194,5 @@ struct TaskCard: View {
                 }
             }
         }
-    }
-}
-
-struct TaskCardView_Previews: PreviewProvider {
-    static var previews: some View {
-        let context = PersistenceController.preview.container.viewContext
-        let viewModel = TaskViewModel(context: context)
-        
-        // Crear una categoría de ejemplo
-        let categoryEntity = NSEntityDescription.entity(forEntityName: "TaskCategory", in: context)!
-        let exampleCategory = TaskCategory(entity: categoryEntity, insertInto: context)
-        exampleCategory.id = UUID()
-        exampleCategory.name = "Ejemplo Categoría"
-        exampleCategory.color = "#FF5733"
-        
-        // Crear algunas tareas de ejemplo
-        let taskEntity = NSEntityDescription.entity(forEntityName: "Task", in: context)!
-        for i in 1...5 {
-            let task = Task(entity: taskEntity, insertInto: context)
-            task.id = UUID()
-            task.title = "Tarea \(i)"
-            task.isCompleted = false
-            task.creationDate = Date()
-            task.category = exampleCategory
-            exampleCategory.addToTasks(task)
-        }
-        
-        return TaskCard(category: exampleCategory, expandedCategoryId: .constant(nil))
-            .environmentObject(viewModel)
-            .previewLayout(.sizeThatFits)
-            .padding()
     }
 }

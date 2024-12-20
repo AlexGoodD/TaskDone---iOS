@@ -4,6 +4,7 @@ import CoreData
 class TaskViewModel: ObservableObject {
     @Published var categories: [TaskCategory] = []
     let context: NSManagedObjectContext
+    private var deletedTasks: [Task] = []
     
     init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
         self.context = context
@@ -121,6 +122,7 @@ class TaskViewModel: ObservableObject {
         newTask.creationDate = Date() // Fecha de creación
         tasks.append(newTask)
         saveContext() // Guardar el contexto inmediatamente después de agregar una nueva tarea
+        fetchCategories()
     }
     
     func addNewTask(to category: TaskCategory, title: String) {
@@ -139,6 +141,7 @@ class TaskViewModel: ObservableObject {
         newTask.category = category
         category.addToTasks(newTask)
         saveContext()
+        fetchCategories()
     }
     
     func addTask(to categoryId: UUID) {
@@ -173,6 +176,8 @@ class TaskViewModel: ObservableObject {
     func removeTask(task: Task, from category: TaskCategory) {
         category.removeFromTasks(task)
         saveContext()
+        deletedTasks.removeAll()
+        fetchCategories()
     }
     
     func saveTasks(_ tasks: [Task], to category: TaskCategory) {

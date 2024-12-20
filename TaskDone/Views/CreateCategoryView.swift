@@ -9,6 +9,7 @@ struct CreateCategoryView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var viewModel: TaskViewModel
     @State private var showAlert = false
+    @State private var isClose = false
     
     var body: some View {
         VStack {
@@ -16,6 +17,7 @@ struct CreateCategoryView: View {
             taskCounter
             Divider().padding(.horizontal)
             taskList
+            
         }
         .padding(.top)
         .toolbar {
@@ -31,6 +33,7 @@ struct CreateCategoryView: View {
                 .disabled(categoryName.isEmpty)
             }
         }
+        
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text("unsaved-changes"),
@@ -53,6 +56,8 @@ struct CreateCategoryView: View {
                 .foregroundColor(.blue)
         })
     }
+        
+    
     
     private var categoryNameField: some View {
         TextField("category-name", text: $categoryName)
