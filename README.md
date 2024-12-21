@@ -23,14 +23,17 @@ TaskDone es una aplicación para gestionar tareas por categorías. Permite crear
 - Ingresa un nombre y selecciona un color.
 - Añade algunas tareas a la categoría.
 - Guarda la categoría.
+
 **2. Editar una categoría**
 - Selecciona una categoría existente.
 - Edita el nombre, color y tareas.
 - Guarda los cambios.
+
 **3. Gestionar una tarea**
 - Marca tareas como completadas.
 - Añade nuevas tareas a una categoría existente.
 - Elimina una tarea.
+
 **4. Eliminar/Duplicar categorías**
 - Mantén presionado las categorías para eliminarlas definitivamente.
 - Duplica categorías para mayor facilidad.
